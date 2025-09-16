@@ -1,0 +1,1266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>HandSpeak — AI-Powered Sign Language Revolution</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Color variables based on login.css theme */
+        :root {
+            --primary: #00c3ff;
+            --secondary: #00fff2;
+            --accent: #ffffff;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --bg-dark: #000000;
+            --bg-card: rgba(26, 26, 26, 0.65);
+            --bg-glass: rgba(0, 0, 0, 0.9);
+            --text-primary: #ffffff;
+            --text-secondary: #d1d5db;
+            --border: #00f7ffb7;
+            --gradient-primary: linear-gradient(to right, rgb(0, 255, 191), rgb(0, 247, 255));
+            --gradient-secondary: linear-gradient(to right, rgb(255, 0, 0), rgb(255, 166, 0));
+            --shadow-lg: 0 0 10px rgba(0, 255, 255, 0.5);
+            --shadow-glow: 0 0 20px rgba(0, 255, 255, 0.7);
+        }
+
+        /* General Body and Main Containers */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* Animated Background */
+        #techCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 0;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            position: relative;
+            display: none;
+            z-index: 1;
+            animation: slideInUp 0.8s ease-out;
+        }
+
+        .container.active {
+            display: block;
+        }
+
+        /* Glass Card Effect */
+        .glass-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(6px);
+            border: 3px solid var(--border);
+            border-radius: 1rem;
+            padding: 3rem;
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        /* Typography */
+        .hero-title, .section-title {
+            font-size: clamp(3rem, 8vw, 6rem);
+            font-weight: 800;
+            color: var(--secondary);
+            text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+            text-align: center;
+            margin-bottom: 1rem;
+            line-height: 1.1;
+        }
+
+        .subtitle {
+            font-size: 1.5rem;
+            color: var(--text-secondary);
+            text-align: center;
+            margin-bottom: 3rem;
+            font-weight: 300;
+        }
+        
+        .section-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--secondary);
+            margin-bottom: 1.5rem;
+            text-align: center;
+            text-shadow: none;
+        }
+        
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 1rem;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            position: relative;
+            overflow: hidden;
+            color: black;
+        }
+
+        .btn-primary {
+            background: var(--gradient-primary);
+        }
+
+        .btn-primary:hover {
+            transform: scale(1.05);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn-secondary {
+            background: var(--gradient-secondary);
+            color: black;
+        }
+
+        .btn-secondary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+        }
+        
+        /* Home Page specific styles */
+        .home-page-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            margin-top: 3rem;
+            align-items: center;
+        }
+        
+        .home-page-buttons .btn {
+            width: 100%;
+            max-width: 400px;
+            justify-content: center;
+        }
+        
+        .home-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        
+        .home-header h2 {
+            margin: 0;
+            color: var(--primary);
+        }
+        
+        .user-greeting {
+            font-size: 1.25rem;
+            font-weight: 500;
+        }
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .form-input, .form-textarea, .form-select {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            background: #111;
+            border: 1px solid #00c3ff;
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            outline: none;
+        }
+
+        .form-input::placeholder, .form-textarea::placeholder {
+            color: #777;
+        }
+
+        .form-input:focus, .form-textarea:focus, .form-select:focus {
+            border-color: var(--secondary);
+            box-shadow: 0 0 0 3px rgba(0, 195, 255, 0.2);
+        }
+        
+        .form-textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+
+        /* Info Sections */
+        .info-section {
+            background: var(--bg-card);
+            backdrop-filter: blur(6px);
+            border: 3px solid var(--border);
+            border-radius: 1rem;
+            padding: 2.5rem;
+            margin: 2rem 0;
+        }
+
+        .info-section h3 {
+            color: var(--secondary);
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        /* Team Cards */
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .team-card {
+            background: #1a1a1a;
+            border: 3px solid var(--border);
+            border-radius: 1rem;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.4s ease;
+        }
+
+        .team-card:hover {
+            transform: translateY(-10px);
+            box-shadow: var(--shadow-glow);
+        }
+
+        .team-name {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .team-role {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        /* Detection Page Styles */
+        .detection-container {
+            text-align: center;
+        }
+
+        .camera-stage {
+            position: relative;
+            margin: 2rem auto;
+            width: 100%;
+            max-width: 640px;
+            aspect-ratio: 4 / 3;
+            border-radius: 1rem;
+            overflow: hidden;
+            background: #222;
+            border: 3px solid #00fff2;
+            box-shadow: var(--shadow-lg);
+        }
+
+        #webcam, #overlay {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            top: 0;
+            left: 0;
+            transform: scaleX(-1);
+        }
+        
+        #overlay {
+            z-index: 10;
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .output {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid #00c3ff;
+            border-radius: 1rem;
+            backdrop-filter: blur(10px);
+            font-size: 1.2rem;
+            color: #00fff2;
+            font-weight: 600;
+        }
+
+        /* Switch Links */
+        .auth-switch {
+            text-align: center;
+            margin-top: 2rem;
+            color: var(--text-secondary);
+        }
+
+        .auth-switch a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .auth-switch a:hover {
+            color: var(--secondary);
+        }
+
+        /* Checkbox Styling */
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .checkbox-container input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--primary);
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1001;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(4px);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-content {
+            margin: 10% auto;
+            padding: 2rem;
+            border-radius: 12px;
+            max-width: 600px;
+            animation: slideInUp 0.5s ease-out;
+            background: rgba(0, 0, 0, 0.9);
+            border: 3px solid #00f7ffb7;
+            box-shadow: 0 0 8px 8px cyan;
+        }
+
+        .close-btn {
+            color: #ffffff;
+            float: right;
+            font-size: 3rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close-btn:hover {
+            color: cyan;
+        }
+
+        #gestureList {
+            list-style-type: none;
+            padding: 0;
+            margin-top: 1rem;
+        }
+
+        #gestureList li {
+            background: #1a1a1a;
+            border-left: 3px solid var(--primary);
+            padding: 1rem 1.5rem;
+            margin-bottom: 1rem;
+            border-radius: 8px;
+            transition: background 0.3s ease;
+        }
+        
+        #gestureList li:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        #gestureList li strong {
+            color: var(--primary);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container { padding: 1rem; }
+            .glass-card { padding: 2rem 1.5rem; }
+            .hero-title { font-size: 2.5rem; }
+            .subtitle { font-size: 1.2rem; }
+            .camera-stage { width: 100%; max-width: 480px; aspect-ratio: 4 / 3; }
+            .controls { flex-direction: column; }
+        }
+        
+        /* Animations */
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .pulse { animation: pulse 2s infinite; }
+
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #fff;
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Notification styles */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            background: #00fff2;
+            color: black;
+            border-radius: 12px;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+            z-index: 1000;
+            font-weight: 600;
+            animation: slideInRight 0.3s ease-out;
+            max-width: 300px;
+            word-wrap: break-word;
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        @keyframes slideOutRight {
+            from {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="techCanvas"></canvas>
+    <div class="overlay"></div>
+
+    <div class="container active" id="welcomePage">
+        <div class="glass-card">
+            <h1 class="hero-title">HandSpeak</h1>
+            <p class="subtitle">Revolutionizing Communication Through AI-Powered Sign Language</p>
+            
+            <div class="info-section">
+                <h3><i class="fas fa-magic"></i> About HandSpeak</h3>
+                <p>HandSpeak is an innovative web application that bridges the communication gap between the deaf, hard of hearing, and those unfamiliar with sign language. Harnessing cutting-edge gesture recognition technology, HandSpeak translates sign language into real-time text and converts it into natural, lifelike speech, making interactions effortless and seamless.</p>
+                <br>
+                <p>Our mission is to empower communication for all, breaking barriers and creating a world where every gesture speaks, every conversation matters, and no voice goes unheard. With HandSpeak, technology meets empathy, ensuring accessibility is not just a feature, but an experience.</p>
+            </div>
+
+            <div class="info-section">
+                <h3><i class="fas fa-users"></i> Meet Our Team</h3>
+                <div class="team-grid">
+                    <div class="team-card">
+                        <div class="team-name">Vishwak Yellamalli</div>
+                        <div class="team-role">Frontend & UI/UX Developer</div>
+                    </div>
+                    <div class="team-card">
+                        <div class="team-name">Kush Vora</div>
+                        <div class="team-role">Backend Developer & Database Management</div>
+                    </div>
+                    <div class="team-card">
+                        <div class="team-name">Sairaj Walawalkar</div>
+                        <div class="team-role">Backend Developer & Database Management</div>
+                    </div>
+                    <div class="team-card">
+                        <div class="team-name">Kartik Yadav</div>
+                        <div class="team-role">Backend Developer & Database Management</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-section">
+                <h3><i class="fas fa-map-marker-alt"></i> Contact & Location</h3>
+                <p><strong>Office:</strong> HandSpeak HQ, Mumbai, India</p>
+                <p><strong>Contact:</strong> +91 8591579369</p>
+                <p><strong>Email:</strong> hello@handspeak.ai</p>
+            </div>
+
+            <div style="text-align: center; margin-top: 3rem;">
+                <button class="btn btn-primary pulse" onclick="showPage('loginPage')">
+                    <i class="fas fa-rocket"></i>
+                    Get Started
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container" id="loginPage">
+        <div class="glass-card" style="max-width: 500px; margin: 0 auto;">
+            <h2 class="section-title">Welcome Back</h2>
+            <p class="subtitle" style="font-size: 1rem; margin-bottom: 2rem;">Sign in to your account</p>
+            
+            <form onsubmit="loginUser(event); return false;">
+                <div class="form-group">
+                    <label class="form-label">Email Address</label>
+                    <input type="email" class="form-input" id="loginEmail" required placeholder="Enter your email">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input type="password" class="form-input" id="loginPassword" required placeholder="Enter your password">
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center;">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Sign In
+                </button>
+            </form>
+            
+            <div class="auth-switch">
+                Don't have an account? 
+                <a onclick="showPage('registerPage')">Create one now</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="container" id="registerPage">
+        <div class="glass-card" style="max-width: 500px; margin: 0 auto;">
+            <h2 class="section-title">Join HandSpeak</h2>
+            <p class="subtitle" style="font-size: 1rem; margin-bottom: 2rem;">Create your account</p>
+            
+            <form onsubmit="registerUser(event); return false;">
+                <div class="form-group">
+                    <label class="form-label">Full Name</label>
+                    <input type="text" class="form-input" id="fullName" required placeholder="Enter your full name">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email Address</label>
+                    <input type="email" class="form-input" id="regEmail" required placeholder="Enter your email">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Age</label>
+                    <input type="number" class="form-input" id="age" required min="1" placeholder="Enter your age">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Gender</label>
+                    <select class="form-input" id="gender" required>
+                        <option value="">Select Gender</option>
+                        <option>Male</option>
+                        <option>Female</option>
+                        <option>Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input type="password" class="form-input" id="regPassword" required placeholder="Create a password">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Confirm Password</label>
+                    <input type="password" class="form-input" id="confirmPassword" required placeholder="Confirm your password">
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center;">
+                    <i class="fas fa-user-plus"></i>
+                    Create Account
+                </button>
+            </form>
+            
+            <div class="auth-switch">
+                Already have an account? 
+                <a onclick="showPage('loginPage')">Sign in here</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="container" id="homePage">
+        <div class="glass-card" style="max-width: 700px; margin: 0 auto; text-align: center;">
+            <div class="home-header">
+                <h2 class="user-greeting">Welcome, <span id="userNameDisplay">User</span>!</h2>
+                <button class="btn btn-secondary" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Logout
+                </button>
+            </div>
+            <h1 class="hero-title" style="margin-top: 0;">HandSpeak</h1>
+            <p class="subtitle" style="margin-bottom: 3rem;">Choose an option to get started</p>
+            
+            <div class="home-page-buttons">
+                <button class="btn btn-primary" onclick="showPage('detectionPage')">
+                    <i class="fas fa-hand-paper"></i>
+                    Gesture Detection
+                </button>
+                <button class="btn btn-primary" onclick="showPage('textToSpeechPage')">
+                    <i class="fas fa-volume-up"></i>
+                    Text to Speech
+                </button>
+                <button class="btn btn-primary" onclick="showPage('feedbackPage')">
+                    <i class="fas fa-comment"></i>
+                    Feedback
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container" id="detectionPage">
+        <div class="glass-card detection-container">
+            <h1 class="section-title">
+                <i class="fas fa-hand-paper"></i>
+                Live Sign Detection
+            </h1>
+            <p class="subtitle" style="margin-bottom: 2rem;">Real-time sign language recognition and speech conversion</p>
+            
+            <div class="camera-stage">
+                <video id="webcam" autoplay playsinline></video>
+                <canvas id="overlay" width="640" height="480"></canvas>
+            </div>
+            
+            <div class="controls">
+                <button id="startBtn" class="btn btn-primary">
+                    <i class="fas fa-play"></i>
+                    Start Detection
+                </button>
+                <button id="stopBtn" class="btn btn-secondary" disabled>
+                    <i class="fas fa-stop"></i>
+                    Stop
+                </button>
+                <button id="speakBtn" class="btn btn-primary">
+                    <i class="fas fa-volume-up"></i>
+                    Speak Now
+                </button>
+                <div class="checkbox-container">
+                    <input type="checkbox" id="autoSpeak" checked>
+                    <label>Auto-speak detected text</label>
+                </div>
+                <button id="infoBtn" class="btn btn-primary">
+                    <i class="fas fa-info-circle"></i>
+                </button>
+            </div>
+            
+            <div class="output" id="detectedText">
+                <i class="fas fa-eye"></i>
+                Detected Text: <strong>None</strong>
+            </div>
+            
+            <div style="text-align: center; margin-top: 2rem;">
+                <button class="btn btn-secondary" onclick="showPage('homePage')">
+                    <i class="fas fa-arrow-left"></i>
+                    Back to Home
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container" id="feedbackPage">
+        <div class="glass-card" style="max-width: 700px; margin: 0 auto;">
+            <h2 class="section-title">
+                <i class="fas fa-comment-dots"></i>
+                Feedback & Queries
+            </h2>
+            <p class="subtitle" style="font-size: 1rem; margin-bottom: 2rem;">We'd love to hear from you!</p>
+
+            <form onsubmit="submitFeedback(event); return false;">
+                <div class="form-group">
+                    <label class="form-label">Your Name</label>
+                    <input type="text" class="form-input" id="feedbackName" required placeholder="Enter your full name">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email Address</label>
+                    <input type="email" class="form-input" id="feedbackEmail" required placeholder="Enter your email">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Your Message</label>
+                    <textarea class="form-textarea" id="feedbackMessage" required placeholder="Type your feedback or query here..."></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; margin-bottom: 1rem;">
+                    <i class="fas fa-paper-plane"></i>
+                    Submit
+                </button>
+            </form>
+            
+            <div style="text-align: center; margin-top: 1rem;">
+                <button class="btn btn-secondary" onclick="showPage('homePage')">
+                    <i class="fas fa-arrow-left"></i>
+                    Back to Home
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container" id="textToSpeechPage">
+        <div class="glass-card" style="max-width: 700px; margin: 0 auto;">
+            <h2 class="section-title">
+                <i class="fas fa-volume-up"></i>
+                Text to Speech
+            </h2>
+            <p class="subtitle">Type text to hear it spoken aloud.</p>
+
+            <div class="form-group">
+                <label for="textInput" class="form-label">Enter Text</label>
+                <textarea class="form-textarea" id="textInput" placeholder="Type your message here..."></textarea>
+            </div>
+
+            <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem; margin-top: 1rem;">
+                <button class="btn btn-primary" id="speakTextBtn">
+                    <i class="fas fa-volume-up"></i>
+                    Speak Text
+                </button>
+            </div>
+            
+            <div style="text-align: center; margin-top: 2rem;">
+                <button class="btn btn-secondary" onclick="showPage('homePage')">
+                    <i class="fas fa-arrow-left"></i>
+                    Back to Home
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="detectionInfoModal" class="modal">
+        <div class="modal-content glass-card">
+            <span class="close-btn">&times;</span>
+            <h3 class="section-title">Detected Signs & Their Gestures</h3>
+            <ul id="gestureList"></ul>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+    
+    <script>
+        // In-memory user storage
+        let registeredUsers = {};
+        let loggedInUser = null;
+
+        // Canvas animation from the login page
+        const canvas = document.getElementById("techCanvas");
+        const ctx = canvas.getContext("2d");
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener("resize", resizeCanvas);
+
+        let nodes = [];
+        const numNodes = 80;
+
+        for (let i = 0; i < numNodes; i++) {
+            nodes.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                vx: (Math.random() - 0.5) * 1,
+                vy: (Math.random() - 0.5) * 1
+            });
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = 0; i < numNodes; i++) {
+                for (let j = i + 1; j < numNodes; j++) {
+                    let dx = nodes[i].x - nodes[j].x;
+                    let dy = nodes[i].y - nodes[j].y;
+                    let dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < 150) {
+                        ctx.strokeStyle = `rgba(0, 195, 255, ${1 - dist / 150})`;
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.moveTo(nodes[i].x, nodes[i].y);
+                        ctx.lineTo(nodes[j].x, nodes[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+            for (let i = 0; i < numNodes; i++) {
+                ctx.beginPath();
+                ctx.arc(nodes[i].x, nodes[i].y, 3, 0, Math.PI * 2);
+                ctx.fillStyle = "#00c3ff";
+                ctx.fill();
+                nodes[i].x += nodes[i].vx;
+                nodes[i].y += nodes[i].vy;
+                if (nodes[i].x < 0 || nodes[i].x > canvas.width) nodes[i].vx *= -1;
+                if (nodes[i].y < 0 || nodes[i].y > canvas.height) nodes[i].vy *= -1;
+            }
+            requestAnimationFrame(animate);
+        }
+        animate();
+
+        function showPage(pageId) {
+            document.querySelectorAll('.container').forEach(c => c.classList.remove('active'));
+            
+            const targetPage = document.getElementById(pageId);
+            if (targetPage) {
+                targetPage.classList.add('active');
+                window.scrollTo({
+                    top: 0, 
+                    behavior: 'smooth'
+                });
+                console.log(`Mapped to: ${pageId}`);
+            }
+            
+            if (pageId !== 'detectionPage') {
+                stopCameraAndDetection();
+            }
+            
+            if (pageId === 'homePage' && loggedInUser) {
+                const userNameDisplay = document.getElementById('userNameDisplay');
+                if (userNameDisplay) {
+                    userNameDisplay.textContent = loggedInUser.name;
+                }
+            }
+        }
+
+        function registerUser(event) {
+            event.preventDefault();
+            
+            const name = document.getElementById("fullName").value;
+            const email = document.getElementById("regEmail").value;
+            const pass = document.getElementById("regPassword").value;
+            const confirm = document.getElementById("confirmPassword").value;
+
+            if (pass !== confirm) {
+                showNotification("Passwords do not match!", 'error');
+                return false;
+            }
+
+            registeredUsers[email] = { name, password: pass };
+            
+            showNotification("Registration successful!", 'success');
+            
+            document.getElementById("fullName").value = "";
+            document.getElementById("regEmail").value = "";
+            document.getElementById("age").value = "";
+            document.getElementById("gender").value = "";
+            document.getElementById("regPassword").value = "";
+            document.getElementById("confirmPassword").value = "";
+            
+            setTimeout(() => {
+                showPage('loginPage');
+            }, 1500);
+            
+            return false;
+        }
+
+        function loginUser(event) {
+            event.preventDefault();
+            
+            const email = document.getElementById("loginEmail").value;
+            const pass = document.getElementById("loginPassword").value;
+
+            if (registeredUsers[email] && registeredUsers[email].password === pass) {
+                loggedInUser = registeredUsers[email];
+                showNotification(`Welcome back, ${loggedInUser.name}!`, 'success');
+                
+                document.getElementById("loginEmail").value = "";
+                document.getElementById("loginPassword").value = "";
+                
+                setTimeout(() => {
+                    showPage('homePage');
+                }, 1500);
+            } else {
+                showNotification("Invalid email or password!", 'error');
+            }
+            return false;
+        }
+
+        function submitFeedback(event) {
+            event.preventDefault();
+            
+            const name = document.getElementById("feedbackName").value;
+            const email = document.getElementById("feedbackEmail").value;
+            const message = document.getElementById("feedbackMessage").value;
+
+            console.log("Feedback Submitted:", { name, email, message });
+
+            showNotification("Thank you for your feedback!", 'success');
+            
+            document.getElementById("feedbackName").value = "";
+            document.getElementById("feedbackEmail").value = "";
+            document.getElementById("feedbackMessage").value = "";
+            
+            setTimeout(() => {
+                showPage('homePage');
+            }, 2000);
+
+            return false;
+        }
+
+        function logout() {
+            stopCameraAndDetection();
+            loggedInUser = null;
+            showNotification("You have been logged out successfully.", 'info');
+            showPage('loginPage');
+        }
+
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.classList.add('notification');
+            notification.style.background = type === 'success' ? '#00fff2' : type === 'info' ? '#00c3ff' : '#ff3d71';
+            notification.style.color = type === 'success' || type === 'info' ? 'black' : 'white';
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideOutRight 0.3s ease-in';
+                setTimeout(() => {
+                    if (notification.parentNode) {
+                        notification.remove();
+                    }
+                }, 300);
+            }, 3000);
+        }
+        
+        // MediaPipe and Detection Logic
+        const videoElem = document.getElementById('webcam');
+        const canvasElem = document.getElementById('overlay');
+        const canvasCtx = canvasElem ? canvasElem.getContext('2d') : null;
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const speakBtn = document.getElementById('speakBtn');
+        const autoSpeakCheckbox = document.getElementById('autoSpeak');
+        const detectedTextEl = document.getElementById('detectedText');
+
+        let camera = null, hands = null, running = false;
+        let lastPred = null, predCount = 0, REQUIRED_CONSISTENCY = 6, currentLabel = "None";
+
+        function isFingerUp(landmarks, finger) {
+            const fingerMap = {
+                thumb: [1, 2, 3, 4],
+                index: [5, 6, 7, 8],
+                middle: [9, 10, 11, 12],
+                ring: [13, 14, 15, 16],
+                pinky: [17, 18, 19, 20]
+            };
+            
+            const ids = fingerMap[finger];
+            if (!ids) return false;
+            
+            const tip = landmarks[ids[ids.length - 1]];
+            const pip = landmarks[ids[1]];
+            
+            if (finger === 'thumb') {
+                return tip.y < pip.y; 
+            } else {
+                return tip.y < pip.y;
+            }
+        }
+        
+        function recognizeFromLandmarks(landmarks) {
+            if (!landmarks) return null;
+
+            const thumbUp = landmarks[4].y < landmarks[3].y;
+            const indexUp = landmarks[8].y < landmarks[7].y;
+            const middleUp = landmarks[12].y < landmarks[11].y;
+            const ringUp = landmarks[16].y < landmarks[15].y;
+            const pinkyUp = landmarks[20].y < landmarks[19].y;
+
+            if (thumbUp && indexUp && middleUp && ringUp && pinkyUp) {
+                return "Thank you";
+            }
+            if (thumbUp && indexUp && !middleUp && !ringUp && pinkyUp) {
+                return "I love you";
+            }
+            if (!thumbUp && indexUp && middleUp && ringUp && pinkyUp) {
+                return "Hello";
+            }
+            if (!thumbUp && !indexUp && !middleUp && !ringUp && pinkyUp) {
+                return "Goodbye";
+            }
+            if (thumbUp && !indexUp && !middleUp && !ringUp && !pinkyUp) {
+                return "Yes";
+            }
+            if (!thumbUp && indexUp && middleUp && !ringUp && !pinkyUp) {
+                return "No";
+            }
+            return null;
+        }
+
+        function handleNewCandidate(candidate) {
+            if (!candidate) {
+                predCount = 0;
+                lastPred = null;
+                return;
+            }
+            
+            if (candidate === lastPred) {
+                predCount++;
+            } else {
+                lastPred = candidate;
+                predCount = 1;
+            }
+            
+            if (predCount >= REQUIRED_CONSISTENCY && candidate !== currentLabel) {
+                currentLabel = candidate;
+                updateUIAndSpeak(candidate);
+            }
+        }
+
+        function updateUIAndSpeak(label) {
+            if (detectedTextEl) {
+                detectedTextEl.innerHTML = `<i class="fas fa-eye"></i> Detected Text: <strong>${label}</strong>`;
+            }
+            if (autoSpeakCheckbox && autoSpeakCheckbox.checked) {
+                speak(label);
+            }
+        }
+
+        function setupHands() {
+            if (typeof Hands === 'undefined') {
+                showNotification("Mediapipe Hands library not loaded.", 'error');
+                return;
+            }
+            hands = new Hands({
+                locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+            });
+            
+            hands.setOptions({
+                selfieMode: true,
+                maxNumHands: 1,
+                modelComplexity: 1,
+                minDetectionConfidence: 0.6,
+                minTrackingConfidence: 0.6
+            });
+            
+            hands.onResults(onHandsResults);
+        }
+
+        function onHandsResults(results) {
+            if (!canvasCtx) return;
+            canvasCtx.save();
+            canvasCtx.clearRect(0, 0, canvasElem.width, canvasElem.height);
+            
+            if (results.image) {
+                canvasCtx.drawImage(results.image, 0, 0, canvasElem.width, canvasElem.height);
+            }
+            
+            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+                for (const landmarks of results.multiHandLandmarks) {
+                    drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, 
+                        {color: '#00D4FF', lineWidth: 3});
+                    drawLandmarks(canvasCtx, landmarks, 
+                        {color: '#FF3D71', lineWidth: 2});
+                }
+                
+                const label = recognizeFromLandmarks(results.multiHandLandmarks[0]);
+                handleNewCandidate(label);
+            } else {
+                handleNewCandidate(null);
+            }
+            
+            canvasCtx.restore();
+        }
+
+        async function startCameraAndDetection() {
+            if (running) return;
+            
+            setupHands();
+            if (videoElem) {
+                camera = new Camera(videoElem, {
+                    onFrame: async () => {
+                        await hands.send({image: videoElem});
+                    },
+                    width: 640,
+                    height: 480
+                });
+            }
+            
+            try {
+                if (camera) {
+                    await camera.start();
+                    running = true;
+                    if (startBtn) startBtn.disabled = true;
+                    if (stopBtn) stopBtn.disabled = false;
+                    showNotification("Camera started successfully!", 'success');
+                }
+            } catch (err) {
+                showNotification("Unable to start camera: " + err, 'error');
+            }
+        }
+
+        function stopCameraAndDetection() {
+            if (!running) return;
+            
+            if (camera) camera.stop();
+            if (hands) hands.close();
+            
+            running = false;
+            if (startBtn) startBtn.disabled = false;
+            if (stopBtn) stopBtn.disabled = true;
+            currentLabel = "None";
+            if (detectedTextEl) detectedTextEl.innerHTML = `<i class="fas fa-eye"></i> Detected Text: <strong>None</strong>`;
+            window.speechSynthesis.cancel();
+            showNotification("Detection stopped", 'info');
+        }
+
+        function speak(text) {
+            if (!("speechSynthesis" in window)) {
+                showNotification("Text to speech not supported in this browser.", 'error');
+                return;
+            }
+            
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = "en-US";
+            utterance.rate = 1;
+            utterance.pitch = 1;
+            window.speechSynthesis.speak(utterance);
+        }
+        
+        // Modal elements
+        const modal = document.getElementById('detectionInfoModal');
+        const infoBtn = document.getElementById('infoBtn');
+        const closeBtn = document.querySelector('.close-btn');
+        const gestureListEl = document.getElementById('gestureList');
+
+        const gestures = [
+            { sign: "Thank you", description: "All five fingers are extended." },
+            { sign: "I love you", description: "Thumb, index, and pinky are extended; middle and ring are curled." },
+            { sign: "Hello", description: "Index, middle, ring, and pinky fingers are extended; thumb is curled." },
+            { sign: "Goodbye", description: "Only the pinky finger is extended." },
+            { sign: "Yes", description: "Only the thumb is extended." },
+            { sign: "No", description: "Index and middle fingers are extended." },
+        ];
+
+        function populateGestureList() {
+            if (!gestureListEl) return;
+            gestureListEl.innerHTML = '';
+            gestures.forEach(g => {
+                const li = document.createElement('li');
+                li.innerHTML = `<strong>${g.sign}:</strong> ${g.description}`;
+                gestureListEl.appendChild(li);
+            });
+        }
+
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            const getStartedBtn = document.querySelector('[onclick="showPage(\'loginPage\')"]');
+            if (getStartedBtn) {
+                getStartedBtn.onclick = () => showPage('loginPage');
+            }
+
+            const loginSwitchBtn = document.querySelector('#loginPage .auth-switch a');
+            if (loginSwitchBtn) {
+                loginSwitchBtn.onclick = () => showPage('registerPage');
+            }
+
+            const registerSwitchBtn = document.querySelector('#registerPage .auth-switch a');
+            if (registerSwitchBtn) {
+                registerSwitchBtn.onclick = () => showPage('loginPage');
+            }
+
+            if (startBtn) startBtn.addEventListener('click', () => startCameraAndDetection());
+            if (stopBtn) stopBtn.addEventListener('click', () => stopCameraAndDetection());
+            if (speakBtn) speakBtn.addEventListener('click', () => {
+                if (currentLabel && currentLabel !== "None") {
+                    speak(currentLabel);
+                } else {
+                    speak("No gesture recognized");
+                }
+            });
+            
+            if (infoBtn) infoBtn.addEventListener('click', () => {
+                populateGestureList();
+                if (modal) modal.style.display = 'block';
+            });
+
+            if (closeBtn) closeBtn.addEventListener('click', () => {
+                if (modal) modal.style.display = 'none';
+            });
+
+            window.addEventListener('click', (event) => {
+                if (event.target == modal) {
+                    if (modal) modal.style.display = 'none';
+                }
+            });
+            
+            // Text to Speech functionality
+            const textInput = document.getElementById('textInput');
+            const speakTextBtn = document.getElementById('speakTextBtn');
+            
+            if (speakTextBtn) {
+                speakTextBtn.addEventListener('click', () => {
+                    const text = textInput.value;
+                    if (!text) {
+                        showNotification("Please enter some text.", 'warning');
+                        return;
+                    }
+                    speak(text);
+                });
+            }
+        });
+    </script>
+</body>
+</html>
