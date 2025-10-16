@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,674 +7,511 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         /* Color variables based on login.css theme */
-/* ====== Root variables (kept original names + neon helpers) ====== */
-:root {
-    --primary: #00c3ff;
-    --secondary: #00fff2;
-    --accent: #ffffff;
-    --success: #10B981;
-    --warning: #F59E0B;
-    --bg-dark: #000000;
-    --bg-card: rgba(26, 26, 26, 0.65);
-    --bg-glass: rgba(0, 0, 0, 0.9);
-    --text-primary: #ffffff;
-    --text-secondary: #d1d5db;
-    --border: #00f7ffb7;
-    --gradient-primary: linear-gradient(to right, rgb(0, 255, 191), rgb(0, 247, 255));
-    --gradient-secondary: linear-gradient(to right, rgb(255, 0, 0), rgb(255, 166, 0));
-    --shadow-lg: 0 0 10px rgba(0, 255, 255, 0.5);
-    --shadow-glow: 0 0 20px rgba(0, 255, 255, 0.7);
-
-    /* Neon helpers */
-    --neon-cyan: #00f7ff;
-    --glass-bg: rgba(26, 26, 26, 0.65);
-    --overlay-dark: rgba(0,0,0,0.85);
-}
-
-/* ====== Reset & base ====== */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-html {
-    scroll-behavior: smooth;
-}
-
-body {
-    font-family: 'Segoe UI', sans-serif;
-    background: var(--bg-dark);
-    color: var(--text-primary);
-    overflow-x: hidden;
-    line-height: 1.6;
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-}
-
-/* ====== Background Canvas & overlay (keeps code1 names) ====== */
-#techCanvas {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: -1;
-    background: transparent; /* canvas animation sits here */
-}
-
-/* Page overlay (keeps code1 .overlay class) */
-.overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: var(--overlay-dark);
-    z-index: 0;
-}
-
-/* ====== Header / Navbar (kept and restyled) ====== */
-header, nav {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    padding: 1rem 2rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: var(--glass-bg);
-    border-bottom: 2px solid var(--border);
-    backdrop-filter: blur(8px);
-    z-index: 1000;
-    box-shadow: 0 0 12px rgba(0, 255, 255, 0.2);
-}
-
-.logo-container {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.logo-img {
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 2px solid rgba(255,255,255,0.06);
-    box-shadow: 0 0 8px rgba(0,255,255,0.06);
-}
-
-header h1 {
-    color: var(--secondary);
-    font-size: 1.25rem;
-    font-weight: 800;
-    letter-spacing: .2px;
-}
-
-nav a {
-    color: var(--neon-cyan);
-    font-weight: 600;
-    text-decoration: none;
-    margin-left: 1.25rem;
-    position: relative;
-    transition: color 0.25s ease, text-shadow 0.25s ease;
-}
-
-nav a:hover {
-    color: #fff;
-    text-shadow: 0 0 10px rgba(0, 255, 255, 0.8);
-}
-
-/* Underline animation */
-nav a::after {
-    content: "";
-    position: absolute;
-    width: 0;
-    height: 2px;
-    left: 0;
-    bottom: -6px;
-    background: var(--neon-cyan);
-    transition: width 0.28s ease;
-}
-nav a:hover::after { width: 100%; }
-
-/* ====== Container & glass card default (kept code1 names) ====== */
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 2rem;
-    position: relative;
-    display: none;
-    z-index: 1;
-    animation: slideInUp 0.8s ease-out;
-}
-
-.container.active { display: block; }
-
-.glass-card {
-    background: var(--bg-card);
-    backdrop-filter: blur(6px);
-    border: 3px solid var(--border);
-    border-radius: 1rem;
-    padding: 3rem;
-    box-shadow: var(--shadow-lg);
-    position: relative;
-    overflow: hidden;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-/* hover glow */
-.glass-card:hover {
-    transform: translateY(-6px);
-    box-shadow: var(--shadow-glow);
-}
-
-/* ====== Typography (hero/section) ====== */
-.hero-title, .section-title {
-    font-size: clamp(3rem, 8vw, 6rem);
-    font-weight: 800;
-    color: var(--secondary);
-    text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
-    text-align: center;
-    margin-bottom: 1rem;
-    line-height: 1.1;
-}
-
-.subtitle {
-    font-size: 1.5rem;
-    color: var(--text-secondary);
-    text-align: center;
-    margin-bottom: 3rem;
-    font-weight: 300;
-}
-
-.section-title {
-    font-size: 2.5rem;
-    font-weight: 700;
-    color: var(--secondary);
-    margin-bottom: 1.5rem;
-    text-align: center;
-    text-shadow: none;
-}
-
-/* ====== Buttons (btn styles preserved) ====== */
-.btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 1rem 2rem;
-    border: none;
-    border-radius: 1rem;
-    font-weight: 600;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    text-decoration: none;
-    position: relative;
-    overflow: hidden;
-    color: black;
-    background: rgba(0,247,255,0.15);
-    border: 2px solid var(--neon-cyan);
-    backdrop-filter: blur(6px);
-}
-
-.btn-primary {
-    background: var(--gradient-primary);
-    color: black;
-    border: 0;
-    box-shadow: 0 6px 18px rgba(0, 255, 255, 0.12);
-}
-
-.btn-primary:hover {
-    transform: scale(1.05);
-    box-shadow: var(--shadow-lg);
-}
-
-.btn-secondary {
-    background: var(--gradient-secondary);
-    color: black;
-}
-
-.btn-secondary:hover {
-    transform: scale(1.05);
-    box-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
-}
-
-/* compact button fallback */
-button, .btn { min-height: 44px; }
-
-/* ====== Home page specifics (kept) ====== */
-.home-page-buttons {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-    margin-top: 3rem;
-    align-items: center;
-}
-
-.home-page-buttons .btn {
-    width: 100%;
-    max-width: 400px;
-    justify-content: center;
-}
-
-.home-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-}
-
-.home-header h2 { margin: 0; color: var(--primary); }
-
-.user-greeting { font-size: 1.25rem; font-weight: 500; }
-
-/* ====== Forms (keep both .form-input and generic form selectors) ====== */
-.form-group { margin-bottom: 1.5rem; position: relative; }
-
-.form-label {
-    display: block;
-    margin-bottom: 0.5rem;
-    color: var(--text-secondary);
-    font-weight: 500;
-    font-size: 0.9rem;
-}
-
-.form-input, .form-textarea, .form-select,
-form input, form textarea, form select {
-    width: 100%;
-    padding: 1rem 1.5rem;
-    background: #111;
-    border: 1px solid var(--primary);
-    border-radius: 12px;
-    color: var(--text-primary);
-    font-size: 1rem;
-    transition: all 0.3s ease;
-    backdrop-filter: blur(10px);
-    outline: none;
-    background: rgba(0,0,0,0.45);
-    border: 2px solid rgba(0,247,255,0.2);
-    color: var(--neon-cyan);
-}
-
-.form-input::placeholder, .form-textarea::placeholder {
-    color: #777;
-}
-
-.form-input:focus, .form-textarea:focus, .form-select:focus,
-form input:focus, form textarea:focus, form select:focus {
-    border-color: var(--secondary);
-    box-shadow: 0 0 0 3px rgba(0,195,255,0.12);
-    background: rgba(0,247,255,0.06);
-}
-
-.form-textarea { min-height: 150px; resize: vertical; }
-
-/* Generic form container */
-form {
-    background: var(--bg-card);
-    border: 3px solid var(--border);
-    border-radius: 1rem;
-    padding: 2rem;
-    margin: 2rem auto;
-    max-width: 680px;
-    backdrop-filter: blur(8px);
-    box-shadow: 0 0 15px rgba(0,255,255,0.08),
-                inset 0 2px 6px rgba(255,255,255,0.03);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-form:hover { transform: translateY(-3px); box-shadow: 0 0 20px rgba(0,255,255,0.12); }
-
-form label { color: var(--neon-cyan); font-weight: 600; margin-bottom: .5rem; }
-
-/* Form submit */
-form button[type="submit"] {
-    width: 100%;
-    background: rgba(0,247,255,0.12);
-    border: 2px solid var(--neon-cyan);
-    color: var(--neon-cyan);
-    padding: 0.75rem;
-    border-radius: 0.75rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-form button[type="submit"]:hover {
-    background: var(--neon-cyan);
-    color: #000;
-    box-shadow: 0 0 20px rgba(0,255,255,0.9);
-    transform: scale(1.03);
-}
-
-/* ====== Info Sections ====== */
-.info-section {
-    background: var(--bg-card);
-    backdrop-filter: blur(6px);
-    border: 3px solid var(--border);
-    border-radius: 1rem;
-    padding: 2.5rem;
-    margin: 2rem 0;
-}
-
-.info-section h3 {
-    color: var(--secondary);
-    font-size: 1.5rem;
-    margin-bottom: 1.5rem;
-    text-align: center;
-    font-weight: 600;
-}
-
-/* ====== Team cards ====== */
-.team-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 2rem;
-    margin-top: 2rem;
-}
-
-.team-card {
-    background: #1a1a1a;
-    border: 3px solid var(--border);
-    border-radius: 1rem;
-    padding: 2rem;
-    text-align: center;
-    transition: transform 0.4s ease, box-shadow 0.4s ease;
-}
-
-.team-card:hover {
-    transform: translateY(-10px);
-    box-shadow: var(--shadow-glow);
-}
-
-.team-name {
-    font-size: 1.3rem;
-    font-weight: 700;
-    color: var(--secondary);
-    margin-bottom: 0.5rem;
-}
-
-.team-role { color: var(--text-secondary); font-size: 0.95rem; }
-
-/* ====== Detection / Camera Stage (keep #webcam and #overlay id) ====== */
-.detection-container { text-align: center; }
-
-.camera-stage {
-    position: relative;
-    margin: 2rem auto;
-    width: 100%;
-    max-width: 640px;
-    aspect-ratio: 4 / 3;
-    border-radius: 1rem;
-    overflow: hidden;
-    background: #222;
-    border: 3px solid var(--secondary);
-    box-shadow: var(--shadow-lg);
-}
-
-/* #webcam: video element, #overlay: canvas overlay above webcam (both from code1) */
-#webcam, #overlay {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    position: absolute;
-    top: 0;
-    left: 0;
-    transform: scaleX(-1); /* camera mirror */
-}
-
-#overlay {
-    z-index: 10; /* overlay canvas sits above webcam stream */
-}
-
-/* controls & outputs */
-.controls {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    align-items: center;
-    gap: 1rem;
-    margin-top: 2rem;
-}
-
-.output {
-    margin-top: 2rem;
-    padding: 1.5rem;
-    background: rgba(0,0,0,0.6);
-    border: 1px solid var(--primary);
-    border-radius: 1rem;
-    backdrop-filter: blur(10px);
-    font-size: 1.1rem;
-    color: var(--secondary);
-    font-weight: 600;
-}
-
-/* ====== Auth switch, checkbox ====== */
-.auth-switch { text-align: center; margin-top: 2rem; color: var(--text-secondary); }
-
-.auth-switch a {
-    color: var(--primary);
-    text-decoration: none;
-    font-weight: 600;
-    cursor: pointer;
-}
-.auth-switch a:hover { color: var(--secondary); }
-
-.checkbox-container {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    color: var(--text-secondary);
-    font-size: 0.9rem;
-}
-.checkbox-container input[type="checkbox"] {
-    width: 18px; height: 18px; accent-color: var(--primary);
-}
-
-/* ====== Modal (kept) ====== */
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 1001;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    background-color: rgba(0, 0, 0, 0.8);
-    backdrop-filter: blur(4px);
-    animation: fadeIn 0.3s ease;
-}
-
-.modal-content {
-    margin: 10% auto;
-    padding: 2rem;
-    border-radius: 12px;
-    max-width: 720px;
-    animation: slideInUp 0.5s ease-out;
-    background: rgba(0, 0, 0, 0.9);
-    border: 3px solid var(--border);
-    box-shadow: 0 0 8px 8px rgba(0,255,255,0.03);
-}
-
-.close-btn {
-    color: #ffffff;
-    float: right;
-    font-size: 2.2rem;
-    font-weight: bold;
-    cursor: pointer;
-}
-.close-btn:hover { color: var(--neon-cyan); }
-
-/* gesture list */
-#gestureList { list-style-type: none; padding: 0; margin-top: 1rem; }
-#gestureList li {
-    background: #1a1a1a;
-    border-left: 3px solid var(--primary);
-    padding: 1rem 1.5rem;
-    margin-bottom: 1rem;
-    border-radius: 8px;
-    transition: background 0.3s ease;
-}
-#gestureList li:hover { background: rgba(255,255,255,0.04); }
-#gestureList li strong { color: var(--primary); }
-
-/* ====== Team / Feature / About / Hero sections from code2 kept & merged ====== */
-.hero {
-    background-color: transparent;
-    display: flex;
-    flex-direction: column;
-    padding: 5rem 3rem 3rem;
-    gap: 2rem;
-    z-index: 1;
-}
-
-@media(min-width: 1024px) {
-    .hero { flex-direction: row; justify-content: space-between; align-items: center; }
-}
-
-.hero-text { max-width: 600px; }
-.hero-text h2 {
-    font-size: 2.5rem;
-    font-weight: 800;
-    color: #ffffff;
-    text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
-}
-.hero-text h2 span { color: var(--secondary); }
-.hero-text p { font-size: 1.125rem; color: var(--text-secondary); margin-top: 1rem; }
-.hero-buttons { margin-top: 1.5rem; }
-
-/* Features */
-.features {
-    background: transparent;
-    min-height: 60vh;
-    display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 4rem 2rem;
-    position: relative; z-index: 1;
-}
-.features h3 { font-size: 2.5rem; font-weight: bold; color: var(--secondary); margin-bottom: 2rem; }
-
-.features-grid {
-    display: grid; gap: 2rem; max-width: 1200px; width: 100%; padding: 0 1rem;
-}
-@media(min-width:768px){ .features-grid { grid-template-columns: repeat(2,1fr); } }
-@media(min-width:1024px){ .features-grid { grid-template-columns: repeat(4,1fr); } }
-
-.feature-box {
-    background: var(--bg-card); padding: 2rem 1.5rem; border-radius: 1rem; border: 3px solid var(--border);
-    transition: transform 0.3s ease, box-shadow 0.3s ease; backdrop-filter: blur(6px);
-}
-.feature-box:hover { transform: translateY(-1px) scale(1.05); box-shadow: var(--shadow-glow); }
-.feature-box h4 { color: var(--neon-cyan); font-size: 1.25rem; margin-bottom: 1rem; }
-.feature-box p { color: var(--text-secondary); line-height: 1.5; }
-
-/* About */
-.about { position: relative; padding: 100px 10%; display:flex; flex-wrap:wrap; align-items:center; gap:60px; overflow:hidden; }
-.about::before {
-    content: "ABOUT US"; position:absolute; top:20px; left:10%; font-size:8rem; font-weight:900; color:rgba(255,255,255,0.05); z-index:0; pointer-events:none;
-    -webkit-text-stroke: 1px rgb(255,255,255); color: transparent;
-}
-.about-intro { flex:1 1 45%; font-size:1.15rem; line-height:1.8; color:#fff; max-width:600px; z-index:2; animation: fadeInUp 1s ease; }
-.about-image { flex:1 1 40%; display:flex; justify-content:center; align-items:center; border-radius:20px; }
-.about-image img { width:100%; max-width:420px; border-radius:20px; transition: transform 0.5s ease; }
-.about-image img:hover { transform: scale(1.05) rotate(-2deg); }
-
-/* Team */
-.team { margin-top:60px; flex:1 1 100%; z-index:2; }
-.team h4 { font-size:1.8rem; font-weight:700; margin-bottom:25px; color:#ffffff; }
-.team-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:25px; }
-
-/* Contact */
-.contact { position:relative; padding:100px 10%; color:#ffffff; text-align:center; }
-.contact h3 { font-size:2.2rem; font-weight:bold; margin-bottom:1rem; color:var(--secondary); }
-.contact p { font-size:1.1rem; color:var(--text-secondary); margin-bottom:3rem; }
-.contact-grid { display:flex; flex-wrap:wrap; gap:40px; justify-content:center; align-items:flex-start; }
-.contact-info { flex:1 1 35%; background: var(--bg-card); padding:2rem; border-radius:1rem; border:2px solid #227e81b7; backdrop-filter: blur(6px); text-align:left; }
-.contact-form { display:flex; flex-direction:column; align-items:center; justify-content:center; width:100%; }
-.contact-form input, .contact-form textarea {
-    width:80%; margin:10px 0; padding:12px; border:1px solid rgba(0,255,255,0.12); border-radius:10px; background:#111; color:#fff; font-size:16px; outline:none;
-}
-.contact-form button {
-    width:80%; margin-top:15px; padding:12px; border:none; border-radius:10px; background:var(--neon-cyan); color:#000; font-weight:bold; cursor:pointer; transition:0.3s;
-}
-.contact-form button:hover { background: rgba(0,255,255,0.9); }
-
-/* ====== Footer (kept) ====== */
-footer {
-    background: var(--bg-card);
-    border-top: 2px solid var(--border);
-    text-align: center;
-    padding: 1.5rem;
-    margin-top: 3rem;
-    color: var(--neon-cyan);
-    font-size: 0.95rem;
-    backdrop-filter: blur(8px);
-    box-shadow: 0 -2px 12px rgba(0, 255, 255, 0.2);
-}
-footer a { color: var(--neon-cyan); text-decoration:none; margin:0 .5rem; transition: color .2s; }
-footer a:hover { color:#fff; text-shadow: 0 0 10px rgba(0,255,255,0.8); }
-
-/* ====== Small UI bits ====== */
-.loading { display:inline-block; width:20px; height:20px; border:2px solid #fff; border-radius:50%; border-top-color:var(--primary); animation: spin 1s linear infinite; }
-
-.notification {
-    position: fixed; top: 20px; right: 20px; padding: 1rem 1.5rem;
-    background: #00fff2; color: black; border-radius: 12px; box-shadow: 0 0 10px rgba(0,255,255,0.4);
-    z-index: 1000; font-weight: 600; animation: slideInRight 0.3s ease-out; max-width: 320px; word-wrap: break-word;
-}
-
-/* ====== Checkbox style kept earlier ====== */
-/* (already defined .checkbox-container above) */
-
-/* ====== Responsive rules (merged) ====== */
-@media (max-width: 768px) {
-    .container { padding: 1rem; }
-    .glass-card { padding: 2rem 1.5rem; }
-    .hero-title { font-size: 2.5rem; }
-    .subtitle { font-size: 1.2rem; }
-    .camera-stage { width: 100%; max-width: 480px; aspect-ratio: 4 / 3; }
-    .controls { flex-direction: column; }
-    header, nav { padding: 0.75rem 1rem; }
-    .logo-img { width: 48px; height: 48px; }
-    .features-grid { grid-template-columns: 1fr; }
-}
-
-/* Larger screens */
-@media (min-width: 1024px) {
-    .camera-box { width: 1000px; height: 530px; }
-}
-
-/* ====== Animations ====== */
-@keyframes slideInUp {
-    from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); }
-}
-@keyframes pulse { 0%,100%{transform:scale(1);}50%{transform:scale(1.05);} }
-.pulse { animation: pulse 2s infinite; }
-
-@keyframes spin { to { transform: rotate(360deg); } }
-@keyframes fadeIn { from { opacity:0;} to { opacity:1;} }
-
-@keyframes fadeInUp { 0% { opacity: 0; transform: translateY(30px);} 100% { opacity: 1; transform: translateY(0);} }
-
-@keyframes slideInRight {
-    from { opacity: 0; transform: translateX(100%);} to { opacity: 1; transform: translateX(0);}
-}
-@keyframes slideOutRight {
-    from { opacity: 1; transform: translateX(0);} to { opacity: 0; transform: translateX(100%);}
-}
-
-/* small helper for accessible focus outlines */
-:focus { outline: 3px solid rgba(0,247,255,0.12); outline-offset: 2px; }
-
-/* =========================
-   End of CSS
-   Paste into your stylesheet and keep your HTML/JS as-is.
-   If you want, I can:
-   - Export a single combined CSS file,
-   - Or produce a diff patch to replace only specific sections.
-   ========================= */
-
+        :root {
+            --primary: #00c3ff;
+            --secondary: #00fff2;
+            --accent: #ffffff;
+            --success: #10B981;
+            --warning: #0f0bf5;
+            --bg-dark: #000000;
+            --bg-card: rgba(26, 26, 26, 0.65);
+            --bg-glass: rgba(0, 0, 0, 0.9);
+            --text-primary: #ffffff;
+            --text-secondary: #d1d5db;
+            --border: #00f7ffb7;
+            --gradient-primary: linear-gradient(to right, rgb(0, 255, 191), rgb(0, 247, 255));
+            --gradient-secondary: linear-gradient(to right, rgb(255, 0, 0), rgb(255, 166, 0));
+            --shadow-lg: 0 0 10px rgba(0, 255, 255, 0.5);
+            --shadow-glow: 0 0 20px rgba(0, 255, 255, 0.7);
+        }
+
+        /* General Body and Main Containers */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* Animated Background */
+        #techCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 0;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            position: relative;
+            display: none;
+            z-index: 1;
+            animation: slideInUp 0.8s ease-out;
+        }
+
+        .container.active {
+            display: block;
+        }
+
+        /* Glass Card Effect */
+        .glass-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(6px);
+            border: 3px solid var(--border);
+            border-radius: 1rem;
+            padding: 3rem;
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        /* Typography */
+        .hero-title, .section-title {
+            font-size: clamp(3rem, 8vw, 6rem);
+            font-weight: 800;
+            color: var(--secondary);
+            text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+            text-align: center;
+            margin-bottom: 1rem;
+            line-height: 1.1;
+        }
+
+        .subtitle {
+            font-size: 1.5rem;
+            color: var(--text-secondary);
+            text-align: center;
+            margin-bottom: 3rem;
+            font-weight: 300;
+        }
+        
+        .section-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--secondary);
+            margin-bottom: 1.5rem;
+            text-align: center;
+            text-shadow: none;
+        }
+        
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 1rem;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            position: relative;
+            overflow: hidden;
+            color: black;
+        }
+
+        .btn-primary {
+            background: var(--gradient-primary);
+        }
+
+        .btn-primary:hover {
+            transform: scale(1.05);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn-secondary {
+            background: var(--gradient-secondary);
+            color: black;
+        }
+
+        .btn-secondary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+        }
+        
+        /* Home Page specific styles */
+        .home-page-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            margin-top: 3rem;
+            align-items: center;
+        }
+        
+        .home-page-buttons .btn {
+            width: 100%;
+            max-width: 400px;
+            justify-content: center;
+        }
+        
+        .home-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        
+        .home-header h2 {
+            margin: 0;
+            color: var(--primary);
+        }
+        
+        .user-greeting {
+            font-size: 1.25rem;
+            font-weight: 500;
+        }
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .form-input, .form-textarea, .form-select {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            background: #111;
+            border: 1px solid #00c3ff;
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            outline: none;
+        }
+
+        .form-input::placeholder, .form-textarea::placeholder {
+            color: #777;
+        }
+
+        .form-input:focus, .form-textarea:focus, .form-select:focus {
+            border-color: var(--secondary);
+            box-shadow: 0 0 0 3px rgba(0, 195, 255, 0.2);
+        }
+        
+        .form-textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+
+        /* Info Sections */
+        .info-section {
+            background: var(--bg-card);
+            backdrop-filter: blur(6px);
+            border: 3px solid var(--border);
+            border-radius: 1rem;
+            padding: 2.5rem;
+            margin: 2rem 0;
+        }
+
+        .info-section h3 {
+            color: var(--secondary);
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        /* Team Cards */
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .team-card {
+            background: #1a1a1a;
+            border: 3px solid var(--border);
+            border-radius: 1rem;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.4s ease;
+        }
+
+        .team-card:hover {
+            transform: translateY(-10px);
+            box-shadow: var(--shadow-glow);
+        }
+
+        .team-name {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .team-role {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        /* Detection Page Styles */
+        .detection-container {
+            text-align: center;
+        }
+
+        .camera-stage {
+            position: relative;
+            margin: 2rem auto;
+            width: 100%;
+            max-width: 640px;
+            aspect-ratio: 4 / 3;
+            border-radius: 1rem;
+            overflow: hidden;
+            background: #222;
+            border: 3px solid #00fff2;
+            box-shadow: var(--shadow-lg);
+        }
+
+        #webcam, #overlay {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            top: 0;
+            left: 0;
+            transform: scaleX(-1);
+        }
+        
+        #overlay {
+            z-index: 10;
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .output {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid #00c3ff;
+            border-radius: 1rem;
+            backdrop-filter: blur(10px);
+            font-size: 1.2rem;
+            color: #00fff2;
+            font-weight: 600;
+        }
+
+        /* Switch Links */
+        .auth-switch {
+            text-align: center;
+            margin-top: 2rem;
+            color: var(--text-secondary);
+        }
+
+        .auth-switch a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .auth-switch a:hover {
+            color: var(--secondary);
+        }
+
+        /* Checkbox Styling */
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .checkbox-container input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--primary);
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1001;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(4px);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-content {
+            margin: 10% auto;
+            padding: 2rem;
+            border-radius: 12px;
+            max-width: 600px;
+            animation: slideInUp 0.5s ease-out;
+            background: rgba(0, 0, 0, 0.9);
+            border: 3px solid #00f7ffb7;
+            box-shadow: 0 0 8px 8px cyan;
+        }
+
+        .close-btn {
+            color: #ffffff;
+            float: right;
+            font-size: 3rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close-btn:hover {
+            color: cyan;
+        }
+
+        #gestureList {
+            list-style-type: none;
+            padding: 0;
+            margin-top: 1rem;
+        }
+
+        #gestureList li {
+            background: #1a1a1a;
+            border-left: 3px solid var(--primary);
+            padding: 1rem 1.5rem;
+            margin-bottom: 1rem;
+            border-radius: 8px;
+            transition: background 0.3s ease;
+        }
+        
+        #gestureList li:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        #gestureList li strong {
+            color: var(--primary);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container { padding: 1rem; }
+            .glass-card { padding: 2rem 1.5rem; }
+            .hero-title { font-size: 2.5rem; }
+            .subtitle { font-size: 1.2rem; }
+            .camera-stage { width: 100%; max-width: 480px; aspect-ratio: 4 / 3; }
+            .controls { flex-direction: column; }
+        }
+        
+        /* Animations */
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .pulse { animation: pulse 2s infinite; }
+
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #fff;
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Notification styles */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            background: #00fff2;
+            color: black;
+            border-radius: 12px;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+            z-index: 1000;
+            font-weight: 600;
+            animation: slideInRight 0.3s ease-out;
+            max-width: 300px;
+            word-wrap: break-word;
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        @keyframes slideOutRight {
+            from {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+        }
     </style>
 </head>
 <body>
@@ -1147,7 +983,7 @@ footer a:hover { color:#fff; text-shadow: 0 0 10px rgba(0,255,255,0.8); }
             }, 3000);
         }
         
-        // MediaPipe and Detection Logic
+        // --- NEW: More Robust MediaPipe and Detection Logic ---
         const videoElem = document.getElementById('webcam');
         const canvasElem = document.getElementById('overlay');
         const canvasCtx = canvasElem ? canvasElem.getContext('2d') : null;
@@ -1158,10 +994,32 @@ footer a:hover { color:#fff; text-shadow: 0 0 10px rgba(0,255,255,0.8); }
         const detectedTextEl = document.getElementById('detectedText');
 
         let camera = null, hands = null, running = false;
-        let lastPred = null, predCount = 0, REQUIRED_CONSISTENCY = 6, currentLabel = "None";
+        let lastPred = null, predCount = 0, REQUIRED_CONSISTENCY = 8, currentLabel = "None";
+        
+        // Enum for curl states
+        const CURL_STATE = { NO_CURL: 0, HALF_CURL: 1, FULL_CURL: 2 };
 
-        function isFingerUp(landmarks, finger) {
-            const fingerMap = {
+        /**
+         * Calculates the Euclidean distance between two 3D points.
+         * @param {object} p1 - First point with x, y, z properties.
+         * @param {object} p2 - Second point with x, y, z properties.
+         * @returns {number} The distance.
+         */
+        function getDistance(p1, p2) {
+            let dx = p2.x - p1.x;
+            let dy = p2.y - p1.y;
+            let dz = p2.z - p1.z;
+            return Math.sqrt(dx*dx + dy*dy + dz*dz);
+        }
+        
+        /**
+         * Determines the curl status of each finger based on distances.
+         * @param {Array<object>} landmarks - The array of hand landmarks.
+         * @returns {object} An object with curl status for each finger.
+         */
+        function getFingerCurlStatus(landmarks) {
+            const fingerCurls = {};
+            const FINGER_IDS = {
                 thumb: [1, 2, 3, 4],
                 index: [5, 6, 7, 8],
                 middle: [9, 10, 11, 12],
@@ -1169,46 +1027,151 @@ footer a:hover { color:#fff; text-shadow: 0 0 10px rgba(0,255,255,0.8); }
                 pinky: [17, 18, 19, 20]
             };
             
-            const ids = fingerMap[finger];
-            if (!ids) return false;
-            
-            const tip = landmarks[ids[ids.length - 1]];
-            const pip = landmarks[ids[1]];
-            
-            if (finger === 'thumb') {
-                return tip.y < pip.y; 
-            } else {
-                return tip.y < pip.y;
+            // Wrist landmark (0) is our reference point
+            const wrist = landmarks[0];
+
+            for (const [finger, ids] of Object.entries(FINGER_IDS)) {
+                const tipId = ids[ids.length - 1];
+                const dipId = ids[ids.length - 2];
+                const pipId = ids[1];
+                
+                const tip = landmarks[tipId];
+                const dip = landmarks[dipId];
+                const pip = landmarks[pipId];
+                
+                const distTipWrist = getDistance(wrist, tip);
+                const distDipWrist = getDistance(wrist, dip);
+                const distPipWrist = getDistance(wrist, pip);
+                
+                if (distTipWrist > distDipWrist && distDipWrist > distPipWrist) {
+                    fingerCurls[finger] = CURL_STATE.NO_CURL;
+                } else if (distTipWrist > distPipWrist) {
+                    fingerCurls[finger] = CURL_STATE.HALF_CURL;
+                } else {
+                    fingerCurls[finger] = CURL_STATE.FULL_CURL;
+                }
             }
+            return fingerCurls;
         }
-        
+
+        /**
+         * Recognizes a gesture based on the curl status of all fingers.
+         * @param {Array<object>} landmarks - The array of hand landmarks.
+         * @returns {string|null} The name of the recognized gesture or null.
+         */
         function recognizeFromLandmarks(landmarks) {
             if (!landmarks) return null;
 
-            const thumbUp = landmarks[4].y < landmarks[3].y;
-            const indexUp = landmarks[8].y < landmarks[7].y;
-            const middleUp = landmarks[12].y < landmarks[11].y;
-            const ringUp = landmarks[16].y < landmarks[15].y;
-            const pinkyUp = landmarks[20].y < landmarks[19].y;
+            const curls = getFingerCurlStatus(landmarks);
+            const { NO_CURL, FULL_CURL, HALF_CURL } = CURL_STATE;
 
-            if (thumbUp && indexUp && middleUp && ringUp && pinkyUp) {
+            // Check each unique finger combination for specific gestures
+            
+            // All fingers extended
+            if (curls.thumb === NO_CURL && curls.index === NO_CURL && 
+                curls.middle === NO_CURL && curls.ring === NO_CURL && 
+                curls.pinky === NO_CURL) {
                 return "Thank you";
             }
-            if (thumbUp && indexUp && !middleUp && !ringUp && pinkyUp) {
-                return "I love you";
-            }
-            if (!thumbUp && indexUp && middleUp && ringUp && pinkyUp) {
+
+            // Only thumb curled
+            if (curls.thumb === FULL_CURL && curls.index === NO_CURL && 
+                curls.middle === NO_CURL && curls.ring === NO_CURL && 
+                curls.pinky === NO_CURL) {
                 return "Hello";
             }
-            if (!thumbUp && !indexUp && !middleUp && !ringUp && pinkyUp) {
-                return "Goodbye";
+
+            // Only middle and ring curled
+            if (curls.thumb === NO_CURL && curls.index === NO_CURL && 
+                curls.middle === FULL_CURL && curls.ring === FULL_CURL && 
+                curls.pinky === NO_CURL) {
+                return "I love you";
             }
-            if (thumbUp && !indexUp && !middleUp && !ringUp && !pinkyUp) {
-                return "Yes";
+
+            // Only ring and pinky curled
+            if (curls.thumb === NO_CURL && curls.index === NO_CURL && 
+                curls.middle === NO_CURL && curls.ring === FULL_CURL && 
+                curls.pinky === FULL_CURL) {
+                return "Please";
             }
-            if (!thumbUp && indexUp && middleUp && !ringUp && !pinkyUp) {
+
+            // Only thumb and pinky extended
+            if (curls.thumb === NO_CURL && curls.index === FULL_CURL && 
+                curls.middle === FULL_CURL && curls.ring === FULL_CURL && 
+                curls.pinky === NO_CURL) {
+                return "Good morning";
+            }
+
+            // Only index and middle extended
+            if (curls.thumb === FULL_CURL && curls.index === NO_CURL && 
+                curls.middle === NO_CURL && curls.ring === FULL_CURL && 
+                curls.pinky === FULL_CURL) {
                 return "No";
             }
+
+            // Only thumb extended
+            if (curls.thumb === NO_CURL && curls.index === FULL_CURL && 
+                curls.middle === FULL_CURL && curls.ring === FULL_CURL && 
+                curls.pinky === FULL_CURL) {
+                return "Yes";
+            }
+
+            // Only pinky extended
+            if (curls.thumb === FULL_CURL && curls.index === FULL_CURL && 
+                curls.middle === FULL_CURL && curls.ring === FULL_CURL && 
+                curls.pinky === NO_CURL) {
+                return "Goodbye";
+            }
+
+            // All fingers curled
+            if (curls.thumb === FULL_CURL && curls.index === FULL_CURL && 
+                curls.middle === FULL_CURL && curls.ring === FULL_CURL && 
+                curls.pinky === FULL_CURL) {
+                return "Sorry";
+            }
+
+            // Only index extended
+            if (curls.thumb === FULL_CURL && curls.index === NO_CURL && 
+                curls.middle === FULL_CURL && curls.ring === FULL_CURL && 
+                curls.pinky === FULL_CURL) {
+                return "Need help";
+            }
+
+            // Only middle finger extended
+            if (curls.thumb === FULL_CURL && curls.index === FULL_CURL && 
+                curls.middle === NO_CURL && curls.ring === FULL_CURL && 
+                curls.pinky === FULL_CURL) {
+                return "Water";
+            }
+
+            // Thumb and index extended only
+            if (curls.thumb === NO_CURL && curls.index === NO_CURL && 
+                curls.middle === FULL_CURL && curls.ring === FULL_CURL && 
+                curls.pinky === FULL_CURL) {
+                return "Good night";
+            }
+
+            // Index and pinky extended only
+            if (curls.thumb === FULL_CURL && curls.index === NO_CURL && 
+                curls.middle === FULL_CURL && curls.ring === FULL_CURL && 
+                curls.pinky === NO_CURL) {
+                return "Take care";
+            }
+
+            // Thumb, index, middle extended
+            if (curls.thumb === NO_CURL && curls.index === NO_CURL && 
+                curls.middle === NO_CURL && curls.ring === FULL_CURL && 
+                curls.pinky === FULL_CURL) {
+                return "Thank you very much";
+            }
+
+            // Middle and ring extended only
+            if (curls.thumb === FULL_CURL && curls.index === FULL_CURL && 
+                curls.middle === NO_CURL && curls.ring === NO_CURL && 
+                curls.pinky === FULL_CURL) {
+                return "Excuse me";
+            }
+
             return null;
         }
 
@@ -1254,8 +1217,8 @@ footer a:hover { color:#fff; text-shadow: 0 0 10px rgba(0,255,255,0.8); }
                 selfieMode: true,
                 maxNumHands: 1,
                 modelComplexity: 1,
-                minDetectionConfidence: 0.6,
-                minTrackingConfidence: 0.6
+                minDetectionConfidence: 0.7,
+                minTrackingConfidence: 0.7
             });
             
             hands.onResults(onHandsResults);
@@ -1294,7 +1257,9 @@ footer a:hover { color:#fff; text-shadow: 0 0 10px rgba(0,255,255,0.8); }
             if (videoElem) {
                 camera = new Camera(videoElem, {
                     onFrame: async () => {
-                        await hands.send({image: videoElem});
+                        if (hands) {
+                           await hands.send({image: videoElem});
+                        }
                     },
                     width: 640,
                     height: 480
@@ -1317,8 +1282,14 @@ footer a:hover { color:#fff; text-shadow: 0 0 10px rgba(0,255,255,0.8); }
         function stopCameraAndDetection() {
             if (!running) return;
             
-            if (camera) camera.stop();
-            if (hands) hands.close();
+            if (camera) {
+                camera.stop();
+                camera = null;
+            }
+            if (hands) {
+                hands.close();
+                hands = null;
+            }
             
             running = false;
             if (startBtn) startBtn.disabled = false;
@@ -1350,12 +1321,21 @@ footer a:hover { color:#fff; text-shadow: 0 0 10px rgba(0,255,255,0.8); }
         const gestureListEl = document.getElementById('gestureList');
 
         const gestures = [
-            { sign: "Thank you", description: "All five fingers are extended." },
-            { sign: "I love you", description: "Thumb, index, and pinky are extended; middle and ring are curled." },
-            { sign: "Hello", description: "Index, middle, ring, and pinky fingers are extended; thumb is curled." },
-            { sign: "Goodbye", description: "Only the pinky finger is extended." },
-            { sign: "Yes", description: "Only the thumb is extended." },
-            { sign: "No", description: "Index and middle fingers are extended." },
+            { sign: "Thank you", description: "All five fingers extended" },
+            { sign: "Hello", description: "All fingers extended except thumb" },
+            { sign: "I love you", description: "Thumb, index, and pinky extended; middle and ring curled" },
+            { sign: "Please", description: "All fingers extended except ring and pinky" },
+            { sign: "Good morning", description: "Only thumb and pinky extended" },
+            { sign: "No", description: "Only index and middle fingers extended" },
+            { sign: "Yes", description: "Only thumb extended" },
+            { sign: "Goodbye", description: "Only pinky extended" },
+            { sign: "Sorry", description: "All fingers curled into a fist" },
+            { sign: "Need help", description: "Only index finger extended" },
+            { sign: "Water", description: "Only middle finger extended" },
+            { sign: "Good night", description: "Only thumb and index extended" },
+            { sign: "Take care", description: "Only index and pinky extended" },
+            { sign: "Thank you very much", description: "Thumb, index, and middle extended" },
+            { sign: "Excuse me", description: "Only middle and ring fingers extended" }
         ];
 
         function populateGestureList() {
