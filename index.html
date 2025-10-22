@@ -983,7 +983,7 @@
             }, 3000);
         }
         
-        // --- NEW: More Robust MediaPipe and Detection Logic ---
+        // MediaPipe and Detection Logic
         const videoElem = document.getElementById('webcam');
         const canvasElem = document.getElementById('overlay');
         const canvasCtx = canvasElem ? canvasElem.getContext('2d') : null;
@@ -995,31 +995,9 @@
 
         let camera = null, hands = null, running = false;
         let lastPred = null, predCount = 0, REQUIRED_CONSISTENCY = 8, currentLabel = "None";
-        
-        // Enum for curl states
-        const CURL_STATE = { NO_CURL: 0, HALF_CURL: 1, FULL_CURL: 2 };
 
-        /**
-         * Calculates the Euclidean distance between two 3D points.
-         * @param {object} p1 - First point with x, y, z properties.
-         * @param {object} p2 - Second point with x, y, z properties.
-         * @returns {number} The distance.
-         */
-        function getDistance(p1, p2) {
-            let dx = p2.x - p1.x;
-            let dy = p2.y - p1.y;
-            let dz = p2.z - p1.z;
-            return Math.sqrt(dx*dx + dy*dy + dz*dz);
-        }
-        
-        /**
-         * Determines the curl status of each finger based on distances.
-         * @param {Array<object>} landmarks - The array of hand landmarks.
-         * @returns {object} An object with curl status for each finger.
-         */
-        function getFingerCurlStatus(landmarks) {
-            const fingerCurls = {};
-            const FINGER_IDS = {
+        function isFingerUp(landmarks, finger) {
+            const fingerMap = {
                 thumb: [1, 2, 3, 4],
                 index: [5, 6, 7, 8],
                 middle: [9, 10, 11, 12],
@@ -1027,149 +1005,414 @@
                 pinky: [17, 18, 19, 20]
             };
             
-            // Wrist landmark (0) is our reference point
-            const wrist = landmarks[0];
-
-            for (const [finger, ids] of Object.entries(FINGER_IDS)) {
-                const tipId = ids[ids.length - 1];
-                const dipId = ids[ids.length - 2];
-                const pipId = ids[1];
-                
-                const tip = landmarks[tipId];
-                const dip = landmarks[dipId];
-                const pip = landmarks[pipId];
-                
-                const distTipWrist = getDistance(wrist, tip);
-                const distDipWrist = getDistance(wrist, dip);
-                const distPipWrist = getDistance(wrist, pip);
-                
-                if (distTipWrist > distDipWrist && distDipWrist > distPipWrist) {
-                    fingerCurls[finger] = CURL_STATE.NO_CURL;
-                } else if (distTipWrist > distPipWrist) {
-                    fingerCurls[finger] = CURL_STATE.HALF_CURL;
-                } else {
-                    fingerCurls[finger] = CURL_STATE.FULL_CURL;
-                }
+            const ids = fingerMap[finger];
+            if (!ids) return false;
+            
+            const tip = landmarks[ids[ids.length - 1]];
+            const pip = landmarks[ids[1]];
+            
+            if (finger === 'thumb') {
+                return tip.y < pip.y; 
+            } else {
+                return tip.y < pip.y;
             }
-            return fingerCurls;
         }
-
-        /**
-         * Recognizes a gesture based on the curl status of all fingers.
-         * @param {Array<object>} landmarks - The array of hand landmarks.
-         * @returns {string|null} The name of the recognized gesture or null.
-         */
+        
         function recognizeFromLandmarks(landmarks) {
             if (!landmarks) return null;
 
-            const curls = getFingerCurlStatus(landmarks);
-            const { NO_CURL, FULL_CURL, HALF_CURL } = CURL_STATE;
+            const thumbUp = landmarks[4].y < landmarks[3].y;
+            const indexUp = landmarks[8].y < landmarks[7].y;
+            const middleUp = landmarks[12].y < landmarks[11].y;
+            const ringUp = landmarks[16].y < landmarks[15].y;
+            const pinkyUp = landmarks[20].y < landmarks[19].y;
 
-            // Check each unique finger combination for specific gestures
-            
-            // All fingers extended
-            if (curls.thumb === NO_CURL && curls.index === NO_CURL && 
-                curls.middle === NO_CURL && curls.ring === NO_CURL && 
-                curls.pinky === NO_CURL) {
+            if (thumbUp && indexUp && middleUp && ringUp && pinkyUp) {
                 return "Thank you";
             }
-
-            // Only thumb curled
-            if (curls.thumb === FULL_CURL && curls.index === NO_CURL && 
-                curls.middle === NO_CURL && curls.ring === NO_CURL && 
-                curls.pinky === NO_CURL) {
-                return "Hello";
-            }
-
-            // Only middle and ring curled
-            if (curls.thumb === NO_CURL && curls.index === NO_CURL && 
-                curls.middle === FULL_CURL && curls.ring === FULL_CURL && 
-                curls.pinky === NO_CURL) {
+            if (thumbUp && indexUp && !middleUp && !ringUp && pinkyUp) {
                 return "I love you";
             }
-
-            // Only ring and pinky curled
-            if (curls.thumb === NO_CURL && curls.index === NO_CURL && 
-                curls.middle === NO_CURL && curls.ring === FULL_CURL && 
-                curls.pinky === FULL_CURL) {
-                return "Please";
+            if (!thumbUp && indexUp && middleUp && ringUp && pinkyUp) {
+                return "Hello";
             }
-
-            // Only thumb and pinky extended
-            if (curls.thumb === NO_CURL && curls.index === FULL_CURL && 
-                curls.middle === FULL_CURL && curls.ring === FULL_CURL && 
-                curls.pinky === NO_CURL) {
-                return "Good morning";
-            }
-
-            // Only index and middle extended
-            if (curls.thumb === FULL_CURL && curls.index === NO_CURL && 
-                curls.middle === NO_CURL && curls.ring === FULL_CURL && 
-                curls.pinky === FULL_CURL) {
-                return "No";
-            }
-
-            // Only thumb extended
-            if (curls.thumb === NO_CURL && curls.index === FULL_CURL && 
-                curls.middle === FULL_CURL && curls.ring === FULL_CURL && 
-                curls.pinky === FULL_CURL) {
-                return "Yes";
-            }
-
-            // Only pinky extended
-            if (curls.thumb === FULL_CURL && curls.index === FULL_CURL && 
-                curls.middle === FULL_CURL && curls.ring === FULL_CURL && 
-                curls.pinky === NO_CURL) {
+            if (!thumbUp && !indexUp && !middleUp && !ringUp && pinkyUp) {
                 return "Goodbye";
             }
-
-            // All fingers curled
-            if (curls.thumb === FULL_CURL && curls.index === FULL_CURL && 
-                curls.middle === FULL_CURL && curls.ring === FULL_CURL && 
-                curls.pinky === FULL_CURL) {
-                return "Sorry";
+            if (thumbUp && !indexUp && !middleUp && !ringUp && !pinkyUp) {
+                return "Yes";
             }
-
-            // Only index extended
-            if (curls.thumb === FULL_CURL && curls.index === NO_CURL && 
-                curls.middle === FULL_CURL && curls.ring === FULL_CURL && 
-                curls.pinky === FULL_CURL) {
+            if (!thumbUp && indexUp && middleUp && !ringUp && !pinkyUp) {
+                return "No";
+            }
+            if (thumbUp && !indexUp && middleUp && !ringUp && !pinkyUp) {
+                return "Help needed";
+            }
+            if (!thumbUp && indexUp && !middleUp && ringUp && !pinkyUp) {
+                return "Food please";
+            }
+            if (thumbUp && !indexUp && !middleUp && ringUp && !pinkyUp) {
+                return "Water please";
+            }
+            if (!thumbUp && indexUp && middleUp && !ringUp && pinkyUp) {
+                return "Emergency";
+            }
+            if (thumbUp && indexUp && !middleUp && ringUp && !pinkyUp) {
+                return "Medicine";
+            }
+            if (!thumbUp && !indexUp && middleUp && ringUp && pinkyUp) {
+                return "Hospital";
+            }
+            if (thumbUp && !indexUp && middleUp && ringUp && !pinkyUp) {
+                return "Phone";
+            }
+            if (!thumbUp && indexUp && !middleUp && !ringUp && pinkyUp) {
+                return "Restroom";
+            }
+            // Add these new gesture checks
+            if (thumbUp && !indexUp && middleUp && ringUp && pinkyUp) {
+                return "Please wait";
+            }
+            if (!thumbUp && indexUp && middleUp && ringUp && !pinkyUp) {
+                return "Need water";
+            }
+            if (thumbUp && indexUp && middleUp && !ringUp && !pinkyUp) {
+                return "Feel sick";
+            }
+            if (!thumbUp && !indexUp && middleUp && !ringUp && pinkyUp) {
+                return "Need rest";
+            }
+            if (thumbUp && !indexUp && !middleUp && ringUp && pinkyUp) {
+                return "Call doctor";
+            }
+            if (!thumbUp && indexUp && !middleUp && ringUp && pinkyUp) {
+                return "Feel pain";
+            }
+            if (thumbUp && !indexUp && middleUp && !ringUp && !pinkyUp) {
+                return "Need medicine";
+            }
+            if (!thumbUp && indexUp && middleUp && !ringUp && pinkyUp) {
+                return "Call ambulance";
+            }
+            if (thumbUp && !indexUp && middleUp && !ringUp && pinkyUp) {
+                return "Feel dizzy";
+            }
+            if (!thumbUp && indexUp && !middleUp && ringUp && !pinkyUp) {
                 return "Need help";
             }
-
-            // Only middle finger extended
-            if (curls.thumb === FULL_CURL && curls.index === FULL_CURL && 
-                curls.middle === NO_CURL && curls.ring === FULL_CURL && 
-                curls.pinky === FULL_CURL) {
-                return "Water";
+            // Add these new gesture combinations
+            if (thumbUp && indexUp && middleUp && !ringUp && pinkyUp) {
+                return "Feeling cold";
+            }
+            if (!thumbUp && indexUp && middleUp && ringUp && !pinkyUp) {
+                return "Feeling hot";
+            }
+            if (thumbUp && !indexUp && middleUp && !ringUp && pinkyUp) {
+                return "Need blanket";
+            }
+            if (!thumbUp && indexUp && !middleUp && ringUp && !pinkyUp) {
+                return "Feel hungry";
+            }
+            if (thumbUp && !indexUp && !middleUp && !ringUp && pinkyUp) {
+                return "Need food";
+            }
+            if (!thumbUp && !indexUp && middleUp && ringUp && !pinkyUp) {
+                return "Feel thirsty";
+            }
+            if (thumbUp && indexUp && !middleUp && ringUp && pinkyUp) {
+                return "Need doctor";
+            }
+            if (!thumbUp && indexUp && middleUp && !ringUp && !pinkyUp) {
+                return "Call family";
+            }
+            if (thumbUp && !indexUp && middleUp && ringUp && pinkyUp) {
+                return "Feel better";
+            }
+            if (!thumbUp && indexUp && !middleUp && !ringUp && !pinkyUp) {
+                return "Thank you doctor";
+            }
+            if (thumbUp && !indexUp && !middleUp && ringUp && !pinkyUp) {
+                return "Need wheelchair";
+            }
+            if (!thumbUp && indexUp && !middleUp && !ringUp && pinkyUp) {
+                return "Feel tired";
+            }
+            if (thumbUp && indexUp && middleUp && ringUp && !pinkyUp) {
+                return "Call nurse";
+            }
+            if (!thumbUp && !indexUp && middleUp && ringUp && pinkyUp) {
+                return "Need bathroom";
+            }
+            if (thumbUp && indexUp && !middleUp && ringUp && !pinkyUp) {
+                return "Feel dizzy";
+            }
+            if (!thumbUp && indexUp && middleUp && !ringUp && pinkyUp) {
+                return "Need medicine now";
+            }
+            if (thumbUp && !indexUp && middleUp && ringUp && !pinkyUp) {
+                return "Feeling better";
+            }
+            if (!thumbUp && indexUp && !middleUp && ringUp && pinkyUp) {
+                return "Need assistance";
+            }
+            if (thumbUp && !indexUp && middleUp && !ringUp && pinkyUp) {
+                return "Emergency help";
+            }
+            if (!thumbUp && indexUp && middleUp && ringUp && pinkyUp) {
+                return "Call immediately";
             }
 
-            // Thumb and index extended only
-            if (curls.thumb === NO_CURL && curls.index === NO_CURL && 
-                curls.middle === FULL_CURL && curls.ring === FULL_CURL && 
-                curls.pinky === FULL_CURL) {
-                return "Good night";
+            // Add these new conditions
+            if (thumbUp && indexUp && !middleUp && ringUp && pinkyUp) {
+                return "Need oxygen";
+            }
+            if (!thumbUp && !indexUp && middleUp && ringUp && !pinkyUp) {
+                return "Cant breathe";
+            }
+            if (thumbUp && indexUp && middleUp && !ringUp && pinkyUp) {
+                return "Feel weak";
+            }
+            if (!thumbUp && indexUp && !middleUp && !ringUp && !pinkyUp) {
+                return "Blood pressure";
+            }
+            if (thumbUp && !indexUp && middleUp && !ringUp && !pinkyUp) {
+                return "Heart pain";
+            }
+            if (!thumbUp && !indexUp && !middleUp && ringUp && !pinkyUp) {
+                return "Sugar low";
+            }
+            if (thumbUp && !indexUp && !middleUp && ringUp && pinkyUp) {
+                return "Headache";
+            }
+            if (!thumbUp && !indexUp && middleUp && !ringUp && !pinkyUp) {
+                return "Stomach pain";
+            }
+            if (thumbUp && indexUp && !middleUp && !ringUp && !pinkyUp) {
+                return "Feel nauseous";
+            }
+            if (!thumbUp && !indexUp && !middleUp && !ringUp && !pinkyUp) {
+                return "Need injection";
             }
 
-            // Index and pinky extended only
-            if (curls.thumb === FULL_CURL && curls.index === NO_CURL && 
-                curls.middle === FULL_CURL && curls.ring === FULL_CURL && 
-                curls.pinky === NO_CURL) {
-                return "Take care";
+            // Alphabet Signs
+            if (thumbUp && indexUp && !middleUp && !ringUp && !pinkyUp && 
+                Math.abs(landmarks[8].x - landmarks[4].x) < 0.1) {
+                return "Letter A";
             }
 
-            // Thumb, index, middle extended
-            if (curls.thumb === NO_CURL && curls.index === NO_CURL && 
-                curls.middle === NO_CURL && curls.ring === FULL_CURL && 
-                curls.pinky === FULL_CURL) {
-                return "Thank you very much";
+            if (thumbUp && indexUp && middleUp && ringUp && pinkyUp &&
+                landmarks[8].y < landmarks[7].y) {
+                return "Letter B";
             }
 
-            // Middle and ring extended only
-            if (curls.thumb === FULL_CURL && curls.index === FULL_CURL && 
-                curls.middle === NO_CURL && curls.ring === NO_CURL && 
-                curls.pinky === FULL_CURL) {
-                return "Excuse me";
+            if (thumbUp && landmarks[4].x > landmarks[8].x &&
+                !indexUp && !middleUp && !ringUp && !pinkyUp) {
+                return "Letter C";
+            }
+
+            if (thumbUp && indexUp && !middleUp && !ringUp && !pinkyUp &&
+                landmarks[8].y < landmarks[4].y) {
+                return "Letter D";
+            }
+
+            if (thumbUp && !indexUp && !middleUp && !ringUp && !pinkyUp &&
+                landmarks[4].x < landmarks[8].x) {
+                return "Letter E";
+            }
+
+            if (thumbUp && indexUp && middleUp && !ringUp && !pinkyUp) {
+                return "Letter F";
+            }
+
+            if (!thumbUp && indexUp && !middleUp && !ringUp && !pinkyUp &&
+                landmarks[8].x > landmarks[5].x) {
+                return "Letter G";
+            }
+
+            if (!thumbUp && indexUp && middleUp && !ringUp && !pinkyUp) {
+                return "Letter H";
+            }
+
+            if (!thumbUp && !indexUp && !middleUp && !ringUp && pinkyUp) {
+                return "Letter I";
+            }
+
+            if (!thumbUp && !indexUp && !middleUp && !ringUp && pinkyUp &&
+                landmarks[20].x > landmarks[17].x) {
+                return "Letter J";
+            }
+
+            if (thumbUp && indexUp && !middleUp && !ringUp && !pinkyUp &&
+                landmarks[8].x > landmarks[4].x) {
+                return "Letter K";
+            }
+
+            if (thumbUp && indexUp && !middleUp && !ringUp && !pinkyUp &&
+                landmarks[4].y < landmarks[8].y) {
+                return "Letter L";
+            }
+
+            if (thumbUp && !indexUp && middleUp && !ringUp && !pinkyUp &&
+                landmarks[12].x > landmarks[4].x) {
+                return "Letter M";
+            }
+
+            if (thumbUp && indexUp && middleUp && !ringUp && !pinkyUp &&
+                landmarks[8].x > landmarks[12].x) {
+                return "Letter N";
+            }
+
+            if (thumbUp && !indexUp && !middleUp && !ringUp && !pinkyUp &&
+                landmarks[4].y > landmarks[8].y) {
+                return "Letter O";
+            }
+
+            if (thumbUp && indexUp && middleUp && !ringUp && !pinkyUp &&
+                landmarks[8].x < landmarks[12].x) {
+                return "Letter P";
+            }
+
+            if (thumbUp && indexUp && !middleUp && !ringUp && pinkyUp) {
+                return "Letter Q";
+            }
+
+            if (!thumbUp && indexUp && middleUp && !ringUp && !pinkyUp &&
+                landmarks[8].x < landmarks[12].x) {
+                return "Letter R";
+            }
+
+            if (!thumbUp && !indexUp && !middleUp && !ringUp && !pinkyUp) {
+                return "Letter S";
+            }
+
+            if (!thumbUp && indexUp && !middleUp && !ringUp && !pinkyUp &&
+                landmarks[8].y > landmarks[5].y) {
+                return "Letter T";
+            }
+
+            if (!thumbUp && indexUp && middleUp && !ringUp && !pinkyUp &&
+                landmarks[12].y < landmarks[11].y) {
+                return "Letter U";
+            }
+
+            if (!thumbUp && indexUp && middleUp && !ringUp && !pinkyUp &&
+                landmarks[12].y > landmarks[11].y) {
+                return "Letter V";
+            }
+
+            if (!thumbUp && indexUp && middleUp && ringUp && !pinkyUp) {
+                return "Letter W";
+            }
+
+            if (thumbUp && !indexUp && !middleUp && !ringUp && pinkyUp &&
+                landmarks[4].x < landmarks[20].x) {
+                return "Letter X";
+            }
+
+            if (thumbUp && !indexUp && !middleUp && !ringUp && pinkyUp &&
+                landmarks[4].y < landmarks[20].y) {
+                return "Letter Y";
+            }
+
+            if (!thumbUp && indexUp && !middleUp && !ringUp && !pinkyUp &&
+                landmarks[8].x < landmarks[5].x) {
+                return "Letter Z";
+            }
+
+            // Numbers 1-10
+            if (!thumbUp && indexUp && !middleUp && !ringUp && !pinkyUp) {
+                return "Number 1";
+            }
+            if (!thumbUp && indexUp && middleUp && !ringUp && !pinkyUp) {
+                return "Number 2";
+            }
+            if (!thumbUp && indexUp && middleUp && ringUp && !pinkyUp) {
+                return "Number 3";
+            }
+            if (!thumbUp && indexUp && middleUp && ringUp && pinkyUp) {
+                return "Number 4";
+            }
+            if (thumbUp && indexUp && middleUp && ringUp && pinkyUp) {
+                return "Number 5";
+            }
+            if (thumbUp && !indexUp && middleUp && ringUp && pinkyUp) {
+                return "Number 6";
+            }
+            if (thumbUp && indexUp && !middleUp && ringUp && pinkyUp) {
+                return "Number 7";
+            }
+            if (thumbUp && indexUp && middleUp && !ringUp && pinkyUp) {
+                return "Number 8";
+            }
+            if (thumbUp && indexUp && middleUp && ringUp && !pinkyUp) {
+                return "Number 9";
+            }
+            if (!thumbUp && !indexUp && !middleUp && !ringUp && !pinkyUp) {
+                return "Number 10";
+            }
+
+            // Numbers 11-20
+            if (thumbUp && !indexUp && !middleUp && !ringUp && pinkyUp) {
+                return "Number 11";
+            }
+            if (thumbUp && indexUp && !middleUp && !ringUp && !pinkyUp) {
+                return "Number 12";
+            }
+            if (thumbUp && indexUp && middleUp && !ringUp && !pinkyUp) {
+                return "Number 13";
+            }
+            if (thumbUp && !indexUp && middleUp && !ringUp && pinkyUp) {
+                return "Number 14";
+            }
+            if (!thumbUp && indexUp && !middleUp && ringUp && pinkyUp) {
+                return "Number 15";
+            }
+            if (!thumbUp && !indexUp && middleUp && ringUp && pinkyUp) {
+                return "Number 16";
+            }
+            if (!thumbUp && indexUp && middleUp && !ringUp && pinkyUp) {
+                return "Number 17";
+            }
+            if (thumbUp && !indexUp && !middleUp && ringUp && pinkyUp) {
+                return "Number 18";
+            }
+            if (thumbUp && !indexUp && middleUp && !ringUp && pinkyUp) {
+                return "Number 19";
+            }
+            if (thumbUp && indexUp && !middleUp && ringUp && !pinkyUp) {
+                return "Number 20";
+            }
+
+            // Numbers 21-30
+            if (!thumbUp && indexUp && middleUp && ringUp && !pinkyUp) {
+                return "Number 21";
+            }
+            if (thumbUp && !indexUp && middleUp && ringUp && !pinkyUp) {
+                return "Number 22";
+            }
+            if (thumbUp && indexUp && !middleUp && !ringUp && pinkyUp) {
+                return "Number 23";
+            }
+            if (!thumbUp && !indexUp && middleUp && !ringUp && pinkyUp) {
+                return "Number 24";
+            }
+            if (thumbUp && !indexUp && !middleUp && !ringUp && !pinkyUp) {
+                return "Number 25";
+            }
+            if (!thumbUp && indexUp && !middleUp && !ringUp && pinkyUp) {
+                return "Number 26";
+            }
+            if (!thumbUp && !indexUp && middleUp && ringUp && !pinkyUp) {
+                return "Number 27";
+            }
+            if (thumbUp && indexUp && middleUp && !ringUp && !pinkyUp) {
+                return "Number 28";
+            }
+            if (!thumbUp && !indexUp && !middleUp && ringUp && pinkyUp) {
+                return "Number 29";
+            }
+            if (thumbUp && !indexUp && middleUp && !ringUp && !pinkyUp) {
+                return "Number 30";
             }
 
             return null;
@@ -1184,6 +1427,7 @@
             
             if (candidate === lastPred) {
                 predCount++;
+                console.log("Prediction count:", predCount, "for gesture:", candidate); // Debug log
             } else {
                 lastPred = candidate;
                 predCount = 1;
@@ -1191,6 +1435,7 @@
             
             if (predCount >= REQUIRED_CONSISTENCY && candidate !== currentLabel) {
                 currentLabel = candidate;
+                console.log("New gesture detected:", currentLabel); // Debug log
                 updateUIAndSpeak(candidate);
             }
         }
@@ -1205,44 +1450,51 @@
         }
 
         function setupHands() {
-            if (typeof Hands === 'undefined') {
-                showNotification("Mediapipe Hands library not loaded.", 'error');
-                return;
+            try {
+                hands = new Hands({
+                    locateFile: (file) => {
+                        return `https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1646424915/${file}`;
+                    }
+                });
+                
+                hands.setOptions({
+                    selfieMode: true,
+                    maxNumHands: 1,
+                    modelComplexity: 0,  // Changed to 0 for better performance
+                    minDetectionConfidence: 0.8,  // Lowered for better detection
+                    minTrackingConfidence: 0.8    // Lowered for better detection
+                });
+                
+                hands.onResults(onHandsResults);
+                console.log("Hands setup successful");
+            } catch (error) {
+                console.error("Error setting up hands:", error);
+                showNotification("Error setting up hand detection", 'error');
             }
-            hands = new Hands({
-                locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
-            });
-            
-            hands.setOptions({
-                selfieMode: true,
-                maxNumHands: 1,
-                modelComplexity: 1,
-                minDetectionConfidence: 0.7,
-                minTrackingConfidence: 0.7
-            });
-            
-            hands.onResults(onHandsResults);
         }
 
+        // Update the onHandsResults function
         function onHandsResults(results) {
-            if (!canvasCtx) return;
+            if (!canvasCtx || !canvasElem) return;
+            
             canvasCtx.save();
             canvasCtx.clearRect(0, 0, canvasElem.width, canvasElem.height);
             
-            if (results.image) {
-                canvasCtx.drawImage(results.image, 0, 0, canvasElem.width, canvasElem.height);
-            }
-            
             if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
                 for (const landmarks of results.multiHandLandmarks) {
+                    // Draw hand landmarks
                     drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, 
-                        {color: '#00D4FF', lineWidth: 3});
+                        {color: '#00FFF2', lineWidth: 3});
                     drawLandmarks(canvasCtx, landmarks, 
-                        {color: '#FF3D71', lineWidth: 2});
+                        {color: '#FFFFFF', lineWidth: 1, radius: 3});
+                    
+                    // Process gesture recognition with debug logging
+                    const gesture = recognizeFromLandmarks(landmarks);
+                    if (gesture) {
+                        console.log("Detected gesture:", gesture);  // Debug log
+                        handleNewCandidate(gesture);
+                    }
                 }
-                
-                const label = recognizeFromLandmarks(results.multiHandLandmarks[0]);
-                handleNewCandidate(label);
             } else {
                 handleNewCandidate(null);
             }
@@ -1253,51 +1505,96 @@
         async function startCameraAndDetection() {
             if (running) return;
             
-            setupHands();
-            if (videoElem) {
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const cameras = devices.filter(device => device.kind === 'videoinput');
+                
+                if (cameras.length === 0) {
+                    throw new Error('No camera found on this device');
+                }
+
+                setupHands();
+
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        width: 640,
+                        height: 480,
+                        facingMode: 'user'
+                    }
+                });
+                
+                if (!videoElem) {
+                    throw new Error('Video element not found');
+                }
+
+                videoElem.srcObject = stream;
+                await videoElem.play();
+
                 camera = new Camera(videoElem, {
                     onFrame: async () => {
                         if (hands) {
-                           await hands.send({image: videoElem});
+                            await hands.send({image: videoElem});
                         }
                     },
                     width: 640,
                     height: 480
                 });
-            }
-            
-            try {
-                if (camera) {
-                    await camera.start();
-                    running = true;
-                    if (startBtn) startBtn.disabled = true;
-                    if (stopBtn) stopBtn.disabled = false;
-                    showNotification("Camera started successfully!", 'success');
-                }
+
+                await camera.start();
+                running = true;
+                
+                const startBtn = document.getElementById('startBtn');
+                const stopBtn = document.getElementById('stopBtn');
+                if (startBtn) startBtn.disabled = true;
+                if (stopBtn) stopBtn.disabled = false;
+                
+                showNotification("Camera started successfully!", 'success');
+
             } catch (err) {
-                showNotification("Unable to start camera: " + err, 'error');
+                console.error('Camera Error:', err);
+                showNotification("Camera Error: " + err.message, 'error');
+                stopCameraAndDetection();
             }
         }
 
         function stopCameraAndDetection() {
             if (!running) return;
             
-            if (camera) {
-                camera.stop();
-                camera = null;
+            try {
+                if (videoElem && videoElem.srcObject) {
+                    const tracks = videoElem.srcObject.getTracks();
+                    tracks.forEach(track => track.stop());
+                    videoElem.srcObject = null;
+                }
+
+                if (camera) {
+                    camera.stop();
+                    camera = null;
+                }
+                
+                if (hands) {
+                    hands.close();
+                    hands = null;
+                }
+                
+                running = false;
+                
+                const startBtn = document.getElementById('startBtn');
+                const stopBtn = document.getElementById('stopBtn');
+                if (startBtn) startBtn.disabled = false;
+                if (stopBtn) stopBtn.disabled = true;
+                
+                currentLabel = "None";
+                if (detectedTextEl) {
+                    detectedTextEl.innerHTML = `<i class="fas fa-eye"></i> Detected Text: <strong>None</strong>`;
+                }
+                window.speechSynthesis.cancel();
+                
+                showNotification("Detection stopped", 'info');
+            } catch (err) {
+                console.error('Error stopping camera:', err);
+                showNotification("Error stopping camera: " + err.message, 'error');
             }
-            if (hands) {
-                hands.close();
-                hands = null;
-            }
-            
-            running = false;
-            if (startBtn) startBtn.disabled = false;
-            if (stopBtn) stopBtn.disabled = true;
-            currentLabel = "None";
-            if (detectedTextEl) detectedTextEl.innerHTML = `<i class="fas fa-eye"></i> Detected Text: <strong>None</strong>`;
-            window.speechSynthesis.cancel();
-            showNotification("Detection stopped", 'info');
         }
 
         function speak(text) {
@@ -1321,90 +1618,308 @@
         const gestureListEl = document.getElementById('gestureList');
 
         const gestures = [
-            { sign: "Thank you", description: "All five fingers extended" },
-            { sign: "Hello", description: "All fingers extended except thumb" },
-            { sign: "I love you", description: "Thumb, index, and pinky extended; middle and ring curled" },
-            { sign: "Please", description: "All fingers extended except ring and pinky" },
-            { sign: "Good morning", description: "Only thumb and pinky extended" },
-            { sign: "No", description: "Only index and middle fingers extended" },
-            { sign: "Yes", description: "Only thumb extended" },
-            { sign: "Goodbye", description: "Only pinky extended" },
-            { sign: "Sorry", description: "All fingers curled into a fist" },
-            { sign: "Need help", description: "Only index finger extended" },
-            { sign: "Water", description: "Only middle finger extended" },
-            { sign: "Good night", description: "Only thumb and index extended" },
-            { sign: "Take care", description: "Only index and pinky extended" },
-            { sign: "Thank you very much", description: "Thumb, index, and middle extended" },
-            { sign: "Excuse me", description: "Only middle and ring fingers extended" }
+            { sign: "Thank you", description: "All five fingers extended." },
+            { sign: "I love you", description: "Thumb, index, and pinky extended; middle and ring curled." },
+            { sign: "Hello", description: "Index, middle, ring, and pinky extended; thumb curled." },
+            { sign: "Goodbye", description: "Only pinky extended." },
+            { sign: "Yes", description: "Only thumb extended." },
+            { sign: "No", description: "Index and middle fingers extended." },
+            { sign: "Help needed", description: "Thumb and middle finger extended only" },
+            { sign: "Food please", description: "Index and ring fingers extended only" },
+            { sign: "Water please", description: "Thumb and ring fingers extended only" },
+            { sign: "Emergency", description: "Index, middle, and pinky extended" },
+            { sign: "Medicine", description: "Thumb, index, and ring extended" },
+            { sign: "Hospital", description: "Middle, ring, and pinky extended" },
+            { sign: "Phone", description: "Thumb, middle, and ring extended" },
+            { sign: "Restroom", description: "Index and pinky extended only" },
+            // Add these new gestures
+            { sign: "Please wait", description: "Thumb, middle, and pinky extended" },
+            { sign: "Need water", description: "Index, middle, and ring fingers extended" },
+            { sign: "Feel sick", description: "Thumb, index, and middle extended" },
+            { sign: "Need rest", description: "Middle and pinky fingers extended" },
+            { sign: "Call doctor", description: "Thumb, ring, and pinky extended" },
+            { sign: "Feel pain", description: "Index, ring, and pinky extended" },
+            { sign: "Need medicine", description: "Thumb, index, and pinky extended" },
+            { sign: "Call ambulance", description: "Index, middle, and pinky extended" },
+            { sign: "Feel dizzy", description: "Thumb, middle, and pinky extended" },
+            { sign: "Need help", description: "Ring and pinky fingers extended" },
+            // Add these new gesture combinations
+            { sign: "Feeling cold", description: "Thumb, index, middle and pinky extended" },
+            { sign: "Feeling hot", description: "Index, middle and ring fingers extended" },
+            { sign: "Need blanket", description: "Thumb, middle, and pinky extended" },
+            { sign: "Feel hungry", description: "Index and ring fingers extended" },
+            { sign: "Need food", description: "Thumb and pinky extended only" },
+            { sign: "Feel thirsty", description: "Middle and ring fingers extended" },
+            { sign: "Need doctor", description: "Thumb, index, ring and pinky extended" },
+            { sign: "Call family", description: "Index and middle extended only" },
+            { sign: "Feel better", description: "Thumb, middle, ring and pinky extended" },
+            { sign: "Thank you doctor", description: "Only index finger extended" },
+            { sign: "Need wheelchair", description: "Thumb and ring finger extended only" },
+            { sign: "Feel tired", description: "Index and pinky fingers extended only" },
+            { sign: "Call nurse", description: "All fingers except pinky extended" },
+            { sign: "Need bathroom", description: "Middle, ring, and pinky extended" },
+            { sign: "Feel dizzy", description: "Thumb, index, and ring extended" },
+            { sign: "Need medicine now", description: "Index, middle, and pinky extended" },
+            { sign: "Feeling better", description: "Thumb, middle, and ring extended" },
+            { sign: "Need assistance", description: "Thumb and index extended only" },
+            { sign: "Feel uncomfortable", description: "Only middle finger extended" },
+            { sign: "Need bed rest", description: "Thumb and middle extended" },
+            { sign: "Call reception", description: "Only index extended" },
+            { sign: "Feel anxious", description: "Thumb, index, and middle fingers extended" },
+            { sign: "High fever", description: "Index and ring fingers extended" },
+            { sign: "Low fever", description: "Thumb and middle fingers extended" },
+            { sign: "Need washroom", description: "Only middle finger extended" },
+            { sign: "Body ache", description: "Thumb, index, and pinky extended" },
+            { sign: "Joint swelling", description: "Only ring finger extended" },
+            { sign: "Need bed", description: "Thumb, middle, and ring extended" },
+            { sign: "Feel vomiting", description: "Index, middle, and pinky extended" },
+            { sign: "Need stretcher", description: "Thumb, ring, and pinky extended" },
+            { sign: "Need nurse", description: "Index and pinky extended" }
         ];
 
-        function populateGestureList() {
+        const alphabetGestures = [
+            { sign: "Letter A", description: "Fist with thumb on side" },
+            { sign: "Letter B", description: "Flat hand with fingers together" },
+            { sign: "Letter C", description: "Curved hand shape" },
+            { sign: "Letter D", description: "Index finger pointing up, thumb on side" },
+            { sign: "Letter E", description: "Curved fingers, thumb across palm" },
+            { sign: "Letter F", description: "Index and thumb touching" },
+            { sign: "Letter G", description: "Index finger pointing sideways" },
+            { sign: "Letter H", description: "Two fingers pointing sideways" },
+            { sign: "Letter I", description: "Pinky finger only" },
+            { sign: "Letter J", description: "Pinky moving in J shape" },
+            { sign: "Letter K", description: "Index and middle finger in V shape" },
+            { sign: "Letter L", description: "L shape with thumb and index" },
+            { sign: "Letter M", description: "Three fingers pointing down" },
+            { sign: "Letter N", description: "Two fingers pointing down" },
+            { sign: "Letter O", description: "Fingers curved into O shape" },
+            { sign: "Letter P", description: "Index pointing down" },
+            { sign: "Letter Q", description: "Index pointing down with thumb" },
+            { sign: "Letter R", description: "Crossed fingers" },
+            { sign: "Letter S", description: "Fist with thumb across fingers" },
+            { sign: "Letter T", description: "Index finger pointing up" },
+            { sign: "Letter U", description: "Two fingers pointing up together" },
+            { sign: "Letter V", description: "Two fingers in V shape" },
+            { sign: "Letter W", description: "Three fingers in W shape" },
+            { sign: "Letter X", description: "Bent index finger" },
+            { sign: "Letter Y", description: "Thumb and pinky extended" },
+            { sign: "Letter Z", description: "Index finger drawing Z shape" }
+        ];
+
+        const numberGestures = [
+            { sign: "Number 1", description: "Index finger only" },
+            { sign: "Number 2", description: "Index and middle fingers" },
+            { sign: "Number 3", description: "Index, middle, and ring fingers" },
+            { sign: "Number 4", description: "All fingers except thumb" },
+            { sign: "Number 5", description: "All fingers extended" },
+            { sign: "Number 6", description: "All fingers except index" },
+            { sign: "Number 7", description: "All fingers except middle" },
+            { sign: "Number 8", description: "All fingers except ring" },
+            { sign: "Number 9", description: "All fingers except pinky" },
+            { sign: "Number 10", description: "Closed fist" },
+            { sign: "Number 11", description: "Thumb and pinky only" },
+            { sign: "Number 12", description: "Thumb and index only" },
+            { sign: "Number 13", description: "Thumb, index, and middle" },
+            { sign: "Number 14", description: "Thumb, middle, and pinky" },
+            { sign: "Number 15", description: "Index, ring, and pinky" },
+            { sign: "Number 16", description: "Middle, ring, and pinky" },
+            { sign: "Number 17", description: "Index, middle, and pinky" },
+            { sign: "Number 18", description: "Thumb, ring, and pinky" },
+            { sign: "Number 19", description: "Thumb, middle, and pinky" },
+            { sign: "Number 20", description: "Thumb, index, and ring" },
+            { sign: "Number 21", description: "Index, middle, and ring" },
+            { sign: "Number 22", description: "Thumb, middle, and ring" },
+            { sign: "Number 23", description: "Thumb, index, and pinky" },
+            { sign: "Number 24", description: "Middle and pinky only" },
+            { sign: "Number 25", description: "Thumb only" },
+            { sign: "Number 26", description: "Index and pinky only" },
+            { sign: "Number 27", description: "Middle and ring only" },
+            { sign: "Number 28", description: "Thumb, index, and middle" },
+            { sign: "Number 29", description: "Ring and pinky only" },
+            { sign: "Number 30", description: "Thumb and middle only" }
+        ];
+
+        gestures.push(...alphabetGestures, ...numberGestures);  // Add alphabet and number gestures to main gestures array
+
+        // Update the updateGestureList function
+        function updateGestureList() {
             if (!gestureListEl) return;
-            gestureListEl.innerHTML = '';
-            gestures.forEach(g => {
-                const li = document.createElement('li');
-                li.innerHTML = `<strong>${g.sign}:</strong> ${g.description}`;
-                gestureListEl.appendChild(li);
-            });
+            
+            gestureListEl.innerHTML = `
+                <h4 style="color: #00fff2; margin-bottom: 1rem;">Basic Signs</h4>
+                ${gestures.slice(0, 6).map(g => `<li><strong>${g.sign}:</strong> ${g.description}</li>`).join('')}
+                
+                <h4 style="color: #00fff2; margin: 1rem 0;">Medical & Emergency Signs</h4>
+                ${gestures.slice(6, 50).map(g => `<li><strong>${g.sign}:</strong> ${g.description}</li>`).join('')}
+                
+                <h4 style="color: #00fff2; margin: 1rem 0;">Alphabet Signs (A-Z)</h4>
+                ${alphabetGestures.map(g => `<li><strong>${g.sign}:</strong> ${g.description}</li>`).join('')}
+                
+                <h4 style="color: #00fff2; margin: 1rem 0;">Number Signs (1-30)</h4>
+                ${numberGestures.map(g => `<li><strong>${g.sign}:</strong> ${g.description}</li>`).join('')}
+            `;
         }
 
-        // Event Listeners
-        document.addEventListener('DOMContentLoaded', function() {
-            const getStartedBtn = document.querySelector('[onclick="showPage(\'loginPage\')"]');
-            if (getStartedBtn) {
-                getStartedBtn.onclick = () => showPage('loginPage');
-            }
-
-            const loginSwitchBtn = document.querySelector('#loginPage .auth-switch a');
-            if (loginSwitchBtn) {
-                loginSwitchBtn.onclick = () => showPage('registerPage');
-            }
-
-            const registerSwitchBtn = document.querySelector('#registerPage .auth-switch a');
-            if (registerSwitchBtn) {
-                registerSwitchBtn.onclick = () => showPage('loginPage');
-            }
-
-            if (startBtn) startBtn.addEventListener('click', () => startCameraAndDetection());
-            if (stopBtn) stopBtn.addEventListener('click', () => stopCameraAndDetection());
-            if (speakBtn) speakBtn.addEventListener('click', () => {
-                if (currentLabel && currentLabel !== "None") {
-                    speak(currentLabel);
-                } else {
-                    speak("No gesture recognized");
+        // Replace the existing startCameraAndDetection function with this updated version
+        async function startCameraAndDetection() {
+            if (running) return;
+            
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const cameras = devices.filter(device => device.kind === 'videoinput');
+                
+                if (cameras.length === 0) {
+                    throw new Error('No camera found on this device');
                 }
-            });
-            
-            if (infoBtn) infoBtn.addEventListener('click', () => {
-                populateGestureList();
-                if (modal) modal.style.display = 'block';
-            });
 
-            if (closeBtn) closeBtn.addEventListener('click', () => {
-                if (modal) modal.style.display = 'none';
-            });
+                setupHands();
 
-            window.addEventListener('click', (event) => {
-                if (event.target == modal) {
-                    if (modal) modal.style.display = 'none';
-                }
-            });
-            
-            // Text to Speech functionality
-            const textInput = document.getElementById('textInput');
-            const speakTextBtn = document.getElementById('speakTextBtn');
-            
-            if (speakTextBtn) {
-                speakTextBtn.addEventListener('click', () => {
-                    const text = textInput.value;
-                    if (!text) {
-                        showNotification("Please enter some text.", 'warning');
-                        return;
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        width: 640,
+                        height: 480,
+                        facingMode: 'user'
                     }
-                    speak(text);
+                });
+                
+                if (!videoElem) {
+                    throw new Error('Video element not found');
+                }
+
+                videoElem.srcObject = stream;
+                await videoElem.play();
+
+                camera = new Camera(videoElem, {
+                    onFrame: async () => {
+                        if (hands) {
+                            await hands.send({image: videoElem});
+                        }
+                    },
+                    width: 640,
+                    height: 480
+                });
+
+                await camera.start();
+                running = true;
+                
+                const startBtn = document.getElementById('startBtn');
+                const stopBtn = document.getElementById('stopBtn');
+                if (startBtn) startBtn.disabled = true;
+                if (stopBtn) stopBtn.disabled = false;
+                
+                showNotification("Camera started successfully!", 'success');
+
+            } catch (err) {
+                console.error('Camera Error:', err);
+                showNotification("Camera Error: " + err.message, 'error');
+                stopCameraAndDetection();
+            }
+        }
+
+        // Update the event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            const startBtn = document.getElementById('startBtn');
+            const stopBtn = document.getElementById('stopBtn');
+            const speakBtn = document.getElementById('speakBtn');
+            const infoBtn = document.getElementById('infoBtn');
+            const modal = document.getElementById('detectionInfoModal');
+            const closeBtn = document.querySelector('.close-btn');
+
+            // Start button
+            if (startBtn) {
+                startBtn.addEventListener('click', async () => {
+                    try {
+                        await startCameraAndDetection();
+                    } catch (error) {
+                        console.error('Start error:', error);
+                        showNotification('Failed to start camera', 'error');
+                    }
                 });
             }
+
+            // Stop button
+            if (stopBtn) {
+                stopBtn.addEventListener('click', () => {
+                    stopCameraAndDetection();
+                });
+            }
+
+            // Speak button
+            if (speakBtn) {
+                speakBtn.addEventListener('click', () => {
+                    if (currentLabel && currentLabel !== "None") {
+                        speak(currentLabel);
+                    }
+                });
+            }
+
+            // Info button
+            if (infoBtn) {
+                infoBtn.addEventListener('click', () => {
+                    updateGestureList();
+                    if (modal) {
+                        modal.style.display = "block";
+                    }
+                });
+            }
+
+            // Close button for modal
+            if (closeBtn) {
+                closeBtn.addEventListener('click', () => {
+                    if (modal) {
+                        modal.style.display = "none";
+                    }
+                });
+            }
+
+            // Click outside modal to close
+            window.addEventListener('click', (event) => {
+                if (event.target === modal) {
+                    modal.style.display = "none";
+                }
+            });
         });
+
+        // Update the stopCameraAndDetection function
+        function stopCameraAndDetection() {
+            if (!running) return;
+            
+            try {
+                if (videoElem && videoElem.srcObject) {
+                    const tracks = videoElem.srcObject.getTracks();
+                    tracks.forEach(track => track.stop());
+                    videoElem.srcObject = null;
+                }
+
+                if (camera) {
+                    camera.stop();
+                    camera = null;
+                }
+                
+                if (hands) {
+                    hands.close();
+                    hands = null;
+                }
+                
+                running = false;
+                
+                const startBtn = document.getElementById('startBtn');
+                const stopBtn = document.getElementById('stopBtn');
+                if (startBtn) startBtn.disabled = false;
+                if (stopBtn) stopBtn.disabled = true;
+                
+                currentLabel = "None";
+                if (detectedTextEl) {
+                    detectedTextEl.innerHTML = `<i class="fas fa-eye"></i> Detected Text: <strong>None</strong>`;
+                }
+                window.speechSynthesis.cancel();
+                
+                showNotification("Detection stopped", 'info');
+            } catch (err) {
+                console.error('Error stopping camera:', err);
+                showNotification("Error stopping camera: " + err.message, 'error');
+            }
+        }
     </script>
 </body>
 </html>
