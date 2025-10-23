@@ -1618,15 +1618,27 @@
         const gestureListEl = document.getElementById('gestureList');
 
         const gestures = [
+            // Existing basic signs...
             { sign: "Thank you", description: "All five fingers extended." },
             { sign: "I love you", description: "Thumb, index, and pinky extended; middle and ring curled." },
             { sign: "Hello", description: "Index, middle, ring, and pinky extended; thumb curled." },
             { sign: "Goodbye", description: "Only pinky extended." },
             { sign: "Yes", description: "Only thumb extended." },
             { sign: "No", description: "Index and middle fingers extended." },
-            { sign: "Help needed", description: "Thumb and middle finger extended only" },
-            { sign: "Food please", description: "Index and ring fingers extended only" },
-            { sign: "Water please", description: "Thumb and ring fingers extended only" },
+            
+            // Add these new basic signs
+            { sign: "Please", description: "Palm circling chest" },
+            { sign: "Sorry", description: "Fist circling chest" },
+            { sign: "Ok", description: "Thumb and index forming circle" },
+            { sign: "Stop", description: "Palm facing forward, all fingers extended" },
+            { sign: "Good", description: "Thumb up position" },
+            { sign: "Bad", description: "Thumb down position" },
+            { sign: "Want", description: "Both palms up position" },
+            { sign: "Help", description: "Right fist over left palm" },
+            { sign: "More", description: "Fingertips together repeatedly" },
+            { sign: "Done", description: "Both hands apart motion" },
+            
+            // Medical & Emergency Signs
             { sign: "Emergency", description: "Index, middle, and pinky extended" },
             { sign: "Medicine", description: "Thumb, index, and ring extended" },
             { sign: "Hospital", description: "Middle, ring, and pinky extended" },
@@ -1849,7 +1861,7 @@
                 speakBtn.addEventListener('click', () => {
                     if (currentLabel && currentLabel !== "None") {
                         speak(currentLabel);
-                    }
+                                       }
                 });
             }
 
